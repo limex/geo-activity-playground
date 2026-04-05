@@ -36,6 +36,10 @@ from ..core.datamodel import (
     Tag,
 )
 from ..core.heart_rate import HeartRateZoneComputer
+from ..core.heatmap_cache import (
+    delete_small_heatmap_cache_entries,
+    import_legacy_heatmap_cache_from_filesystem,
+)
 from ..core.paths import TIME_SERIES_DIR
 from ..core.raster_map import (
     BlankImageTransform,
@@ -220,6 +224,8 @@ def create_app(
     config = config_accessor()
     with app.app_context():
         _migrate_null_activity_fields_to_unknown(config)
+        import_legacy_heatmap_cache_from_filesystem()
+        delete_small_heatmap_cache_entries(config.heatmap_cache_min_activities)
 
     authenticator = Authenticator(config)
     tile_getter = TileGetter(config.map_tile_url)
@@ -356,6 +362,7 @@ def web_ui_main(
     port: int,
     strava_begin: str | None,
     strava_end: str | None,
+    dev: bool = False,
 ) -> None:
     os.chdir(basedir)
 
@@ -429,7 +436,14 @@ def web_ui_main(
 
     atexit.register(cleanup)
 
-    app.run(host=host, port=port)
+    if dev:
+        logger.info("Starting development server (Werkzeug) with debugger enabled.")
+        app.run(host=host, port=port, debug=True)
+    else:
+        import waitress
+
+        logger.info("Starting production server (waitress).")
+        waitress.serve(app, host=host, port=port, threads=16)
 
 
 def _try_get_version():

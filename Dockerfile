@@ -27,6 +27,6 @@ RUN mkdir /data
 
 EXPOSE 5000
 
-CMD ["uv", "run", "python", "-m", "geo_activity_playground", "--basedir", "/data", "serve", "--host", "0.0.0.0"]
+CMD ["/app/.venv/bin/python", "-m", "geo_activity_playground", "--basedir", "/data", "serve", "--host", "0.0.0.0"]
 
 

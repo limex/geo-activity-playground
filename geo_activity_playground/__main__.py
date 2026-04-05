@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 import pathlib
 
 import coloredlogs
@@ -55,6 +56,7 @@ def main() -> None:
             port=options.port,
             strava_begin=options.strava_begin,
             strava_end=options.strava_end,
+            dev=os.environ.get("GAP_DEV", "0") == "1",
         )
     )
     subparser.add_argument(

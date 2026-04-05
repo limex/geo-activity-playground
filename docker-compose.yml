@@ -1,0 +1,13 @@
+services:
+  geo-activity-playground:
+    build: .
+    image: geo-activity-playground:local
+    container_name: geo-activity-playground
+    pull_policy: never
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./playground/:/data
+    environment:
+      - GAP_DEV=0
+    restart: unless-stopped
