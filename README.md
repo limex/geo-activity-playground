@@ -12,6 +12,19 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.2)
+
+This is a fork of [martin-ueding/geo-activity-playground](https://github.com/martin-ueding/geo-activity-playground). The following changes were made on top of v1.26.1:
+
+- **Production WSGI server**: Replaced Werkzeug development server with [Waitress](https://docs.pylonsproject.org/projects/waitress/) (16 threads) for parallel tile serving
+- **Dev/prod switch**: `GAP_DEV=1` environment variable enables Werkzeug with debugger; `GAP_DEV=0` (default) uses Waitress
+- **Docker Compose**: Added `docker-compose.yml` with `container_name`, local image build (`pull_policy: never`), and `GAP_DEV` environment variable
+- **Optimized Docker build**: Added `.dockerignore` to reduce build context from ~1GB to ~22KB; replaced `uv run` CMD with direct venv Python to prevent dev dependency installation at startup
+- **Bug fix**: Fixed `KeyError: 'id'` crash on heatmap tile requests when search filters return no matching activities
+- **Deploy script**: Added `deploy-to-prod.sh` for rsync-based deployment to a production server
+
+---
+
 ## 🚀 Features
 
 - 📍 **Activity Import & Analysis**  
