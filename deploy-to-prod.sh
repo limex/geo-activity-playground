@@ -10,10 +10,12 @@ rsync \
   --delete \
   --exclude='/playground/' \
   --filter='+ /Dockerfile' \
+  --filter='+ /.dockerignore' \
   --filter='+ /docker-compose.yml' \
   --filter='+ /pyproject.toml' \
   --filter='+ /uv.lock' \
   --filter='+ /alembic.ini' \
+  --filter='+ /deploy-to-prod.sh' \
   --filter='+ /geo_activity_playground/' \
   --filter='+ /geo_activity_playground/**' \
   --filter='- *' \

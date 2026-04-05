@@ -443,7 +443,7 @@ def web_ui_main(
         import waitress
 
         logger.info("Starting production server (waitress).")
-        waitress.serve(app, host=host, port=port, threads=16)
+        waitress.serve(app, host=host, port=port, threads=32)
 
 
 def _try_get_version():
