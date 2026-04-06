@@ -18,6 +18,7 @@ Changes on top of v1.26.2:
 
 - **Default-deny authentication**: All pages now require login when a password is configured. Previously only specific pages were protected via per-route decorators — any newly added page was public by default.
 - **Tile endpoints remain public**: Background map tiles (`/tile/`), heatmap tiles (`/heatmap/tile/`) and explorer tiles (`/explorer/.../tile/`) are served without authentication so embedded maps work without a session.
+- **Logout menu entry**: Added "Log Out" to the admin dropdown in the navigation bar.
 
 ---
 
