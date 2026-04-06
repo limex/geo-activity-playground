@@ -52,7 +52,7 @@ from ...core.raster_map import (
 )
 from ...explorer.grid_file import make_grid_file_geojson, make_grid_points
 from ...explorer.tile_visits import TileVisitAccessor, remove_activity_from_tile_state
-from ..authenticator import Authenticator, needs_authentication
+from ..authenticator import Authenticator
 from ..columns import TIME_SERIES_COLUMNS
 
 logger = logging.getLogger(__name__)
@@ -338,7 +338,6 @@ def make_activity_blueprint(
         )
 
     @blueprint.route("/edit/<id>", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def edit(id: str) -> ResponseReturnValue:
         activity = DB.session.get(Activity, int(id))
         if activity is None:
@@ -379,7 +378,6 @@ def make_activity_blueprint(
         )
 
     @blueprint.route("/trim/<id>", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def trim(id: str) -> ResponseReturnValue:
         activity = DB.session.get(Activity, int(id))
         if activity is None:
@@ -451,7 +449,6 @@ def make_activity_blueprint(
         )
 
     @blueprint.route("/delete/<id>")
-    @needs_authentication(authenticator)
     def delete(id: int) -> ResponseReturnValue:
         activity = DB.session.get_one(Activity, id)
         activity.delete_data()
@@ -465,7 +462,6 @@ def make_activity_blueprint(
         return redirect(url_for("index"))
 
     @blueprint.route("/download-original/<id>")
-    @needs_authentication(authenticator)
     def download_original(id: int) -> ResponseReturnValue:
         activity = DB.session.get_one(Activity, id)
         path = pathlib.Path(activity.path)

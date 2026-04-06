@@ -56,7 +56,7 @@ from ...explorer.tile_visits import (
     compute_tile_visits_new,
 )
 from ...importers.strava_api import refresh_activity_names_from_strava
-from ..authenticator import Authenticator, needs_authentication
+from ..authenticator import Authenticator
 from ..flasher import Flasher, FlashTypes
 from ..i18n import SUPPORTED_LANGUAGES
 
@@ -242,12 +242,10 @@ def make_settings_blueprint(
     blueprint = Blueprint("settings", __name__, template_folder="templates")
 
     @blueprint.route("/")
-    @needs_authentication(authenticator)
     def index():
         return render_template("settings/index.html.j2")
 
     @blueprint.route("/maintenance", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def maintenance():
         if request.method == "POST":
             action = request.form.get("action")
@@ -329,7 +327,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/language", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def language():
         if request.method == "POST":
             lang = request.form.get("language", "")
@@ -357,7 +354,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/admin-password", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def admin_password() -> Response:
         if request.method == "POST":
             config_accessor().upload_password = request.form["password"]
@@ -371,7 +367,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/cluster-bookmarks/new", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def cluster_bookmark_new():
         if request.method == "POST":
             bm = ExplorerTileBookmark(
@@ -394,7 +389,6 @@ def make_settings_blueprint(
             )
 
     @blueprint.route("/cluster-bookmarks/delete/<int:id>")
-    @needs_authentication(authenticator)
     def cluster_bookmark_delete(id: int):
         bookmark = DB.session.get_one(ExplorerTileBookmark, id)
         flasher.flash_message(f"Bookmark {bookmark.name} deleted.", FlashTypes.SUCCESS)
@@ -403,7 +397,6 @@ def make_settings_blueprint(
         return redirect(request.referrer)
 
     @blueprint.route("/color-schemes", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def color_schemes():
         if request.method == "POST":
             config_accessor().color_scheme_for_counts = request.form[
@@ -444,7 +437,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/color-strategy", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def color_strategy():
         if request.method == "POST":
             print(request.form)
@@ -509,7 +501,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/manage-equipments", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def manage_equipments():
         if request.method == "POST":
             ids = request.form.getlist("id")
@@ -539,7 +530,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/manage-kinds")
-    @needs_authentication(authenticator)
     def manage_kinds():
         kinds = DB.session.scalars(sqlalchemy.select(Kind).order_by(Kind.name)).all()
         return render_template(
@@ -548,7 +538,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/manage-kinds/new", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def kinds_new():
         if request.method == "POST":
             name = request.form.get("name", "").strip()
@@ -588,7 +577,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/manage-kinds/edit/<int:id>", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def kinds_edit(id: int):
         kind = DB.session.get_one(Kind, id)
 
@@ -656,7 +644,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/manage-kinds/delete/<int:id>")
-    @needs_authentication(authenticator)
     def kinds_delete(id: int):
         kind = DB.session.get_one(Kind, id)
         kind_name = kind.name
@@ -666,7 +653,6 @@ def make_settings_blueprint(
         return redirect(url_for(".manage_kinds"))
 
     @blueprint.route("/heart-rate", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def heart_rate():
         if request.method == "POST":
             birth_year = int_or_none(request.form["birth_year"])
@@ -694,7 +680,6 @@ def make_settings_blueprint(
         return render_template("settings/heart-rate.html.j2", **context)
 
     @blueprint.route("/metadata-extraction", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def metadata_extraction():
         if request.method == "POST":
             metadata_extraction_regexes = request.form.getlist("regex")
@@ -721,7 +706,6 @@ def make_settings_blueprint(
         return render_template("settings/metadata-extraction.html.j2", **context)
 
     @blueprint.route("/privacy-zones", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def privacy_zones():
         if request.method == "POST":
             zone_names = request.form.getlist("zone_name")
@@ -795,7 +779,6 @@ def make_settings_blueprint(
         return render_template("settings/privacy-zones.html.j2", **context)
 
     @blueprint.route("/segmentation", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def segmentation():
         if request.method == "POST":
             threshold = int(request.form.get("threshold", 0))
@@ -814,7 +797,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/sharepic", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def sharepic():
         if request.method == "POST":
             names = request.form.getlist("name")
@@ -836,7 +818,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/strava", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def strava():
         if request.method == "POST":
             strava_client_id = request.form["strava_client_id"]
@@ -850,7 +831,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/strava-upload", methods=["POST"])
-    @needs_authentication(authenticator)
     def strava_upload():
         uploaded_archive = request.files.get("strava_checkout_zip")
         if uploaded_archive is None or uploaded_archive.filename in (None, ""):
@@ -883,7 +863,6 @@ def make_settings_blueprint(
         return redirect(url_for(".strava"))
 
     @blueprint.route("/strava-callback")
-    @needs_authentication(authenticator)
     def strava_callback():
         code = request.args.get("code", type=str)
         assert code
@@ -891,7 +870,6 @@ def make_settings_blueprint(
         return redirect(url_for(".strava"))
 
     @blueprint.route("/tags")
-    @needs_authentication(authenticator)
     def tags_list():
         return render_template(
             "settings/tags-list.html.j2",
@@ -899,7 +877,6 @@ def make_settings_blueprint(
         )
 
     @blueprint.route("/tags/new", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def tags_new():
         if request.method == "POST":
             tag_str = request.form["tag"].strip()
@@ -942,7 +919,6 @@ def make_settings_blueprint(
             )
 
     @blueprint.route("/tags/edit/<int:id>", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def tags_edit(id: int):
         tag = DB.session.get_one(Tag, id)
         if request.method == "POST":
@@ -971,7 +947,6 @@ def make_settings_blueprint(
             return render_template("settings/tags-edit.html.j2", tag=tag)
 
     @blueprint.route("/tags/scan-existing", methods=["POST"])
-    @needs_authentication(authenticator)
     def tags_scan_existing():
         tags = get_tags_with_extraction_regex()
         if not tags:
@@ -996,7 +971,6 @@ def make_settings_blueprint(
         return redirect(url_for(".tags_list"))
 
     @blueprint.route("/tile-source", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def tile_source() -> str:
         if request.method == "POST":
             config_accessor().map_tile_url = request.form["map_tile_url"]

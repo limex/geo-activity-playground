@@ -23,7 +23,7 @@ from ...explorer.tile_visits import (
 from ...importers.directory import import_from_directory
 from ...importers.strava_api import import_from_strava_api
 from ...importers.strava_checkout import import_from_strava_checkout
-from ..authenticator import Authenticator, needs_authentication
+from ..authenticator import Authenticator
 from ..flasher import Flasher, FlashTypes
 
 
@@ -37,7 +37,6 @@ def make_upload_blueprint(
     blueprint = Blueprint("upload", __name__, template_folder="templates")
 
     @blueprint.route("/")
-    @needs_authentication(authenticator)
     def index():
         pathlib.Path("Activities").mkdir(exist_ok=True, parents=True)
         directories = []
@@ -47,7 +46,6 @@ def make_upload_blueprint(
         return render_template("upload/index.html.j2", directories=directories)
 
     @blueprint.route("/receive", methods=["POST"])
-    @needs_authentication(authenticator)
     def receive():
         # check if the post request has the file part
         if "file" not in request.files:
@@ -95,12 +93,10 @@ def make_upload_blueprint(
         return redirect(f"/activity/{latest_activity.id}")
 
     @blueprint.route("/refresh")
-    @needs_authentication(authenticator)
     def reload():
         return render_template("upload/reload.html.j2")
 
     @blueprint.route("/execute-reload")
-    @needs_authentication(authenticator)
     def execute_reload():
         scan_for_activities(repository, tile_visit_accessor, config)
         flash("Scanned for new activities.", category="success")

@@ -1,10 +1,15 @@
-import functools
-from collections.abc import Callable
-
-from flask import flash, redirect, request, session, url_for
-from flask.typing import RouteCallable
+from flask import flash, redirect, session, url_for
 
 from ..core.config import Config
+
+PUBLIC_ENDPOINTS = frozenset({
+    "static",         # Flask built-in static file serving
+    "auth.index",     # login page (GET + POST)
+    "auth.logout",
+    "tile.tile",      # background OSM tiles  /tile/<scheme>/<z>/<x>/<y>.png
+    "heatmap.tile",   # heatmap tiles         /heatmap/tile/<z>/<x>/<y>.png
+    "explorer.tile",  # explorer tiles        /explorer/<zoom>/tile/<z>/<x>/<y>.png
+})
 
 
 class Authenticator:
@@ -27,18 +32,3 @@ class Authenticator:
     def logout(self) -> None:
         session["is_authenticated"] = False
         flash("Logout successful.", category="success")
-
-
-def needs_authentication(authenticator: Authenticator) -> Callable:
-    def decorator(route: RouteCallable) -> RouteCallable:
-        @functools.wraps(route)
-        def wrapped_route(*args, **kwargs):
-            if authenticator.is_authenticated():
-                return route(*args, **kwargs)
-            else:
-                flash("You need to be logged in to view that site.", category="Warning")
-                return redirect(url_for("auth.index", redirect=request.url))
-
-        return wrapped_route
-
-    return decorator

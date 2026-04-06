@@ -12,7 +12,7 @@ from ...core.config import ConfigAccessor
 from ...core.datamodel import DB, Activity, Photo
 from ...core.paths import PHOTOS_DIR
 from ...core.photos import get_metadata_from_image
-from ..authenticator import Authenticator, needs_authentication
+from ..authenticator import Authenticator
 from ..flasher import Flasher, FlashTypes
 
 
@@ -89,7 +89,6 @@ def make_photo_blueprint(
         )
 
     @blueprint.route("/new", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def new() -> ResponseReturnValue:
         if request.method == "POST":
             # check if the post request has the file part

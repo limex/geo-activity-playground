@@ -12,9 +12,18 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.3)
+
+Changes on top of v1.26.2:
+
+- **Default-deny authentication**: All pages now require login when a password is configured. Previously only specific pages were protected via per-route decorators — any newly added page was public by default.
+- **Tile endpoints remain public**: Background map tiles (`/tile/`), heatmap tiles (`/heatmap/tile/`) and explorer tiles (`/explorer/.../tile/`) are served without authentication so embedded maps work without a session.
+
+---
+
 ## Fork Changes (v1.26.2)
 
-This is a fork of [martin-ueding/geo-activity-playground](https://github.com/martin-ueding/geo-activity-playground). The following changes were made on top of v1.26.1:
+This is a fork of [martin-ueding/geo-activity-playground](https://github.com/martin-ueding/geo-activity-playground). The following changes were made on top of v1.26.0:
 
 - **Production WSGI server**: Replaced Werkzeug development server with [Waitress](https://docs.pylonsproject.org/projects/waitress/) (16 threads) for parallel tile serving
 - **Dev/prod switch**: `GAP_DEV=1` environment variable enables Werkzeug with debugger; `GAP_DEV=0` (default) uses Waitress

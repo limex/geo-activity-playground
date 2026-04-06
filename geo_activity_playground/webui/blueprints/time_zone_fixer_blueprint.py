@@ -7,7 +7,7 @@ from ...core.config import Config
 from ...core.datamodel import DB, Activity
 from ...core.enrichment import enrichment_set_timezone, update_and_commit
 from ...explorer.tile_visits import TileVisitAccessor
-from ..authenticator import Authenticator, needs_authentication
+from ..authenticator import Authenticator
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +23,11 @@ def make_time_zone_fixer_blueprint(
         return render_template("time_zone_fixer/index.html.j2")
 
     @blueprint.route("/local-to-utc")
-    @needs_authentication(authenticator)
     def local_to_utc():
         convert(True)
         return redirect(url_for("index"))
 
     @blueprint.route("/utc-to-utc")
-    @needs_authentication(authenticator)
     def utc_to_utc():
         convert(False)
         return redirect(url_for("index"))
@@ -51,7 +49,6 @@ def make_time_zone_fixer_blueprint(
             update_and_commit(activity, time_series, config)
 
     @blueprint.route("/truncate-activities")
-    @needs_authentication(authenticator)
     def truncate_activities():
         DB.session.query(Activity).delete()
         DB.session.commit()

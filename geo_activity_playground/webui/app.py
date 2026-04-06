@@ -15,7 +15,7 @@ import warnings
 
 import pandas as pd
 import sqlalchemy
-from flask import Flask, request
+from flask import Flask, flash, redirect, request, url_for
 from flask_alembic import Alembic
 from flask_babel import Babel
 
@@ -50,7 +50,7 @@ from ..core.raster_map import (
     TileGetter,
 )
 from ..explorer.tile_visits import TileVisitAccessor
-from .authenticator import Authenticator
+from .authenticator import Authenticator, PUBLIC_ENDPOINTS
 from .blueprints.activity_blueprint import make_activity_blueprint
 from .blueprints.admin_blueprint import make_admin_blueprint
 from .blueprints.auth_blueprint import make_auth_blueprint
@@ -228,6 +228,15 @@ def create_app(
         delete_small_heatmap_cache_entries(config.heatmap_cache_min_activities)
 
     authenticator = Authenticator(config)
+
+    @app.before_request
+    def require_authentication():
+        if request.endpoint is None or request.endpoint in PUBLIC_ENDPOINTS:
+            return
+        if not authenticator.is_authenticated():
+            flash("You need to be logged in to view that page.", category="warning")
+            return redirect(url_for("auth.index", redirect=request.url))
+
     tile_getter = TileGetter(config.map_tile_url)
     image_transforms = {
         "color": IdentityImageTransform(),

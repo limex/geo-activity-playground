@@ -22,7 +22,7 @@ from ...core.meta_search import (
     primitives_to_url_str,
     register_search_query,
 )
-from ..authenticator import Authenticator, needs_authentication
+from ..authenticator import Authenticator
 
 
 def make_search_blueprint(authenticator: Authenticator, config: Config) -> Blueprint:
@@ -183,7 +183,6 @@ def make_search_blueprint(authenticator: Authenticator, config: Config) -> Bluep
         )
 
     @blueprint.route("/save-search-query")
-    @needs_authentication(authenticator)
     def save_search_query():
         primitives = parse_search_params(request.args)
         query_json = primitives_to_json(primitives)
@@ -208,7 +207,6 @@ def make_search_blueprint(authenticator: Authenticator, config: Config) -> Bluep
         return redirect(urllib.parse.unquote_plus(request.args["redirect"]))
 
     @blueprint.route("/delete-search-query")
-    @needs_authentication(authenticator)
     def delete_search_query():
         primitives = parse_search_params(request.args)
         query_json = primitives_to_json(primitives)

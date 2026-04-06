@@ -16,7 +16,7 @@ from ...core.segments import (
     segment_track_distance,
 )
 from ...explorer.tile_visits import TileVisitAccessor
-from ..authenticator import Authenticator, needs_authentication
+from ..authenticator import Authenticator
 from ..flasher import Flasher, FlashTypes
 
 
@@ -36,7 +36,6 @@ def make_segments_blueprint(
         )
 
     @blueprint.route("/new", methods=["POST"])
-    @needs_authentication(authenticator)
     def new() -> ResponseReturnValue:
         if request.method == "POST":
             if "file" not in request.files:
@@ -87,7 +86,6 @@ def make_segments_blueprint(
         )
 
     @blueprint.route("/delete/<int:id>")
-    @needs_authentication(authenticator)
     def delete(id: int) -> ResponseReturnValue:
         segment = DB.session.get_one(Segment, id)
         name = segment.name
@@ -97,7 +95,6 @@ def make_segments_blueprint(
         return redirect(url_for(".index"))
 
     @blueprint.route("/rematch/<int:id>", methods=["POST"])
-    @needs_authentication(authenticator)
     def rematch(id: int) -> ResponseReturnValue:
         segment = DB.session.get_one(Segment, id)
         deleted_matches, _ = rematch_segment(

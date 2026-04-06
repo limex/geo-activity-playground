@@ -14,7 +14,7 @@ from ...core.parametric_plot import (
     PlotSpec,
     make_parametric_plot,
 )
-from ..authenticator import Authenticator, needs_authentication
+from ..authenticator import Authenticator
 from ..flasher import Flasher, FlashTypes
 
 
@@ -31,7 +31,6 @@ def make_plot_builder_blueprint(
         )
 
     @blueprint.route("/new")
-    @needs_authentication(authenticator)
     def new() -> ResponseReturnValue:
         spec = PlotSpec(
             name="My New Plot",
@@ -45,7 +44,6 @@ def make_plot_builder_blueprint(
         return redirect(url_for(".edit", id=spec.id))
 
     @blueprint.route("/import-spec", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def import_spec() -> ResponseReturnValue:
         if request.form:
             parameters = json.loads(request.form["spec_json"])
@@ -57,7 +55,6 @@ def make_plot_builder_blueprint(
             return render_template("plot_builder/import-spec.html.j2")
 
     @blueprint.route("/edit/<int:id>", methods=["GET", "POST"])
-    @needs_authentication(authenticator)
     def edit(id: int) -> ResponseReturnValue:
         spec = DB.session.get_one(PlotSpec, id)
         if request.form:
@@ -91,7 +88,6 @@ def make_plot_builder_blueprint(
         )
 
     @blueprint.route("/delete/<int:id>")
-    @needs_authentication(authenticator)
     def delete(id: int) -> ResponseReturnValue:
         spec = DB.session.get(PlotSpec, id)
         DB.session.delete(spec)

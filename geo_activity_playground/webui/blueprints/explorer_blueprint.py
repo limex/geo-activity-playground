@@ -52,7 +52,7 @@ from ...explorer.tile_visits import (
     get_tile_medians,
     get_tile_visits,
 )
-from ..authenticator import Authenticator, needs_authentication
+from ..authenticator import Authenticator
 
 alt.data_transformers.enable("vegafusion")
 
@@ -304,7 +304,6 @@ def make_explorer_blueprint(
     blueprint = Blueprint("explorer", __name__, template_folder="templates")
 
     @blueprint.route("/enable-zoom-level/<int:zoom>")
-    @needs_authentication(authenticator)
     def enable_zoom_level(zoom: int) -> ResponseReturnValue:
         if 0 <= zoom <= 19:
             config_accessor().explorer_zoom_levels.append(zoom)
