@@ -203,6 +203,13 @@ def create_app(
 
     DB.init_app(app)
 
+    @sqlalchemy.event.listens_for(sqlalchemy.engine.Engine, "connect")
+    def set_sqlite_wal(dbapi_connection, _):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.close()
+
     if run_migrations:
         app.config["ALEMBIC"] = {"script_location": "../alembic/versions"}
         alembic = Alembic()

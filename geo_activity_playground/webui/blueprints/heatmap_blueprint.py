@@ -91,18 +91,18 @@ def make_heatmap_blueprint(
     @blueprint.route("/tile/<int:z>/<int:x>/<int:y>.png")
     def tile(x: int, y: int, z: int):
         primitives = parse_search_params(request.args)
+        counts, num_activities = _get_counts(
+            x, y, z, primitives, config, repository, activities_per_tile
+        )
+        etag = str(num_activities) if num_activities is not None else None
+        if etag and request.headers.get("If-None-Match") == etag:
+            return Response(status=304)
         f = io.BytesIO()
-        pl.imsave(
-            f,
-            _render_tile_image(
-                x, y, z, primitives, config, repository, activities_per_tile
-            ),
-            format="png",
-        )
-        return Response(
-            bytes(f.getbuffer()),
-            mimetype="image/png",
-        )
+        pl.imsave(f, _counts_to_image(counts, config), format="png")
+        headers: dict[str, str] = {"Cache-Control": "public, max-age=43200"}
+        if etag:
+            headers["ETag"] = etag
+        return Response(bytes(f.getbuffer()), mimetype="image/png", headers=headers)
 
     @blueprint.route(
         "/download/<float:north>/<float:east>/<float:south>/<float:west>/heatmap.png"
@@ -152,7 +152,7 @@ def _get_counts(
     config: Config,
     repository: ActivityRepository,
     activities_per_tile: dict[int, dict[tuple[int, int], set[int]]],
-) -> np.ndarray:
+) -> tuple[np.ndarray, int | None]:
     tile_pixels = (OSM_TILE_SIZE, OSM_TILE_SIZE)
     tile_counts = np.zeros(tile_pixels, dtype=np.int32)
     activity_ids = activities_per_tile[z].get((x, y), set())
@@ -215,6 +215,7 @@ def _get_counts(
             included_activity_ids=parsed_activities,
             min_activities=config.heatmap_cache_min_activities,
         )
+        return tile_counts, len(parsed_activities)
     else:
         for activity_id in activity_ids:
             try:
@@ -225,7 +226,7 @@ def _get_counts(
                 )
                 continue
             _paint_activity(tile_counts, time_series, x=x, y=y, z=z)
-    return tile_counts
+        return tile_counts, None
 
 
 def _favorite_search_query_id(primitives: dict) -> int | None:
@@ -254,6 +255,18 @@ def _paint_activity(
         tile_counts += aim
 
 
+def _counts_to_image(counts: np.ndarray, config: Config) -> np.ndarray:
+    tile_counts = np.zeros(counts.shape)
+    tile_counts += counts
+    tile_counts = np.sqrt(tile_counts) / 5
+    tile_counts[tile_counts > 1.0] = 1.0
+    cmap = pl.get_cmap(config.color_scheme_for_heatmap)
+    data_color = cmap(tile_counts)
+    data_color[tile_counts > 0, 3] = 0.8
+    data_color[tile_counts == 0, 3] = 0.0
+    return data_color
+
+
 def _render_tile_image(
     x: int,
     y: int,
@@ -263,17 +276,5 @@ def _render_tile_image(
     repository: ActivityRepository,
     activities_per_tile: dict[int, dict[tuple[int, int], set[int]]],
 ) -> np.ndarray:
-    tile_pixels = (OSM_TILE_SIZE, OSM_TILE_SIZE)
-    tile_counts = np.zeros(tile_pixels)
-    tile_counts += _get_counts(
-        x, y, z, primitives, config, repository, activities_per_tile
-    )
-
-    tile_counts = np.sqrt(tile_counts) / 5
-    tile_counts[tile_counts > 1.0] = 1.0
-
-    cmap = pl.get_cmap(config.color_scheme_for_heatmap)
-    data_color = cmap(tile_counts)
-    data_color[tile_counts > 0, 3] = 0.8
-    data_color[tile_counts == 0, 3] = 0.0
-    return data_color
+    counts, _ = _get_counts(x, y, z, primitives, config, repository, activities_per_tile)
+    return _counts_to_image(counts, config)

@@ -12,9 +12,15 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.4)
+
+- **HTTP tile caching**: Heatmap tiles now return `Cache-Control: public, max-age=43200` (12 hours) and an `ETag` header. Browsers skip the download on unchanged tiles (304 Not Modified), reducing bandwidth on repeated map panning and zooming.
+- **SQLite WAL mode**: Database now runs in Write-Ahead Logging mode with `synchronous=NORMAL`, improving concurrent read/write performance during tile serving.
+
+---
+
 ## Fork Changes (v1.26.3)
 
-Changes on top of v1.26.2:
 
 - **Default-deny authentication**: All pages now require login when a password is configured. Previously only specific pages were protected via per-route decorators — any newly added page was public by default.
 - **Tile endpoints remain public**: Background map tiles (`/tile/`), heatmap tiles (`/heatmap/tile/`) and explorer tiles (`/explorer/.../tile/`) are served without authentication so embedded maps work without a session.
