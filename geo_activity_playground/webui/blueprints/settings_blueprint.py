@@ -986,6 +986,17 @@ def make_settings_blueprint(
             test_url=config_accessor().map_tile_url.format(zoom=14, x=8514, y=5504),
         )
 
+    @blueprint.route("/misc", methods=["GET", "POST"])
+    def misc():
+        if request.method == "POST":
+            config_accessor().photo_grace_period_minutes = int(request.form["photo_grace_period_minutes"])
+            config_accessor.save()
+            flasher.flash_message("Settings saved.", FlashTypes.SUCCESS)
+        return render_template(
+            "settings/misc.html.j2",
+            photo_grace_period_minutes=config_accessor().photo_grace_period_minutes,
+        )
+
     return blueprint
 
 

@@ -12,6 +12,17 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.5)
+
+- **Photo bulk import**: Drop images into `photo-upload/` inside the playground directory and trigger import via the web UI (Upload Photos page). Imported photos are deleted from the folder automatically; unmatched ones stay for review.
+- **Photo storage optimised**: Originals are deleted after import. Only two WebP thumbnails are kept per photo (128px for map markers, 512px for previews). No upscaling — images smaller than the target size are stored at their original dimensions.
+- **Timezone-aware EXIF parsing**: When a photo lacks an EXIF timezone offset, the correct local timezone is inferred from GPS coordinates using `timezonefinder`. Fixes incorrect UTC mapping for cameras that store local time without offset.
+- **Activity grace period**: Photos taken slightly before or after an activity can still be matched. Configurable in Settings → Management → Misc. (default: 10 minutes).
+- **Duplicate detection**: Photos with an identical EXIF timestamp are skipped and deleted from the upload folder automatically.
+- **Misc. settings page**: New Settings → Management → Misc. page for miscellaneous configuration values.
+
+---
+
 ## Fork Changes (v1.26.4)
 
 - **HTTP tile caching**: Heatmap tiles now return `Cache-Control: public, max-age=43200` (12 hours) and an `ETag` header. Browsers skip the download on unchanged tiles (304 Not Modified), reducing bandwidth on repeated map panning and zooming.

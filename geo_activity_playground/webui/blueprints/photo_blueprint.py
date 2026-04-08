@@ -1,17 +1,15 @@
-import datetime
 import pathlib
-import uuid
+import tempfile
 
 import geojson
 import sqlalchemy
 from flask import Blueprint, Response, redirect, render_template, request, url_for
 from flask.typing import ResponseReturnValue
-from PIL import Image, ImageOps
 
 from ...core.config import ConfigAccessor
 from ...core.datamodel import DB, Activity, Photo
 from ...core.paths import PHOTOS_DIR
-from ...core.photos import get_metadata_from_image
+from ...core.photos import PHOTO_UPLOAD_DIR, import_photos_from_folder, process_photo
 from ..authenticator import Authenticator
 from ..flasher import Flasher, FlashTypes
 
@@ -23,19 +21,10 @@ def make_photo_blueprint(
 
     @blueprint.route("/get/<int:id>/<int:size>.webp")
     def get(id: int, size: int) -> Response:
-        assert size < 5000
+        assert size in (128, 512)
         photo = DB.session.get_one(Photo, id)
 
-        original_path = PHOTOS_DIR() / "original" / photo.path
         small_path = PHOTOS_DIR() / f"size-{size}" / photo.path.with_suffix(".webp")
-
-        if not small_path.exists():
-            with Image.open(original_path) as im:
-                target_size = (size, size)
-                im = ImageOps.exif_transpose(im)
-                im = ImageOps.contain(im, target_size)
-                small_path.parent.mkdir(exist_ok=True)
-                im.save(small_path)
 
         with open(small_path, "rb") as f:
             return Response(f.read(), mimetype="image/webp")
@@ -55,7 +44,7 @@ def make_photo_blueprint(
                         "photo_id": photo.id,
                         "url_marker": url_for(".get", id=photo.id, size=128),
                         "url_popup": url_for(".get", id=photo.id, size=512),
-                        "url_full": url_for(".get", id=photo.id, size=4096),
+                        "url_full": url_for(".get", id=photo.id, size=512),
                     },
                 )
                 for photo in photos
@@ -77,7 +66,7 @@ def make_photo_blueprint(
                         "photo_id": photo.id,
                         "url_marker": url_for(".get", id=photo.id, size=128),
                         "url_popup": url_for(".get", id=photo.id, size=512),
-                        "url_full": url_for(".get", id=photo.id, size=4096),
+                        "url_full": url_for(".get", id=photo.id, size=512),
                     },
                 )
                 for photo in activity.photos
@@ -87,6 +76,20 @@ def make_photo_blueprint(
             geojson.dumps(fc, sort_keys=True, indent=2, ensure_ascii=False),
             mimetype="application/json",
         )
+
+    @blueprint.route("/bulk-import")
+    def bulk_import() -> Response:
+        from flask import current_app
+        app = current_app._get_current_object()
+        basedir = pathlib.Path.cwd()
+
+        def generate():
+            with app.app_context():
+                for line in import_photos_from_folder(basedir, config_accessor):
+                    yield f"data: {line}\n\n"
+                yield "data: __done__\n\n"
+
+        return Response(generate(), mimetype="text/event-stream")
 
     @blueprint.route("/new", methods=["GET", "POST"])
     def new() -> ResponseReturnValue:
@@ -109,57 +112,16 @@ def make_photo_blueprint(
                     flasher.flash_message("Empty file uploaded.", FlashTypes.WARNING)
                     return redirect(url_for(".new"))
 
-                filename = str(uuid.uuid4()) + pathlib.Path(file.filename).suffix
-                path = PHOTOS_DIR() / "original" / filename
-                path.parent.mkdir(exist_ok=True)
-                file.save(path)
-                metadata = get_metadata_from_image(path)
+                suffix = pathlib.Path(file.filename).suffix
+                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                    tmp_path = pathlib.Path(tmp.name)
+                file.save(tmp_path)
 
-                if "time" not in metadata:
-                    flasher.flash_message(
-                        f"Your image '{file.filename}' doesn't have the EXIF attribute 'EXIF DateTimeOriginal' and hence cannot be dated.",
-                        FlashTypes.DANGER,
-                    )
+                photo, error = process_photo(tmp_path, config_accessor)
+                if error:
+                    tmp_path.unlink(missing_ok=True)
+                    flasher.flash_message(error, FlashTypes.DANGER)
                     continue
-                time: datetime.datetime = metadata["time"]
-
-                activity = DB.session.scalar(
-                    sqlalchemy.select(Activity)
-                    .where(
-                        Activity.start.is_not(None),
-                        Activity.elapsed_time.is_not(None),
-                        Activity.start <= time,
-                    )
-                    .order_by(Activity.start.desc())
-                    .limit(1)
-                )
-                if (
-                    activity is None
-                    or activity.start_utc + activity.elapsed_time < time
-                ):
-                    flasher.flash_message(
-                        f"Your image '{file.filename}' is from {time} but no activity could be found. Please first upload an activity or fix the time in the photo.",
-                        FlashTypes.DANGER,
-                    )
-                    continue
-
-                if "latitude" not in metadata:
-                    time_series = activity.time_series
-                    print(time_series)
-                    row = time_series.loc[time_series["time"] >= time].iloc[0]
-                    metadata["latitude"] = row["latitude"]
-                    metadata["longitude"] = row["longitude"]
-
-                photo = Photo(
-                    filename=filename,
-                    time=time,
-                    latitude=metadata["latitude"],
-                    longitude=metadata["longitude"],
-                    activity=activity,
-                )
-
-                DB.session.add(photo)
-                DB.session.commit()
                 new_photos.append(photo)
 
             if new_photos:

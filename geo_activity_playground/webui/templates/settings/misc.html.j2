@@ -1,0 +1,22 @@
+{% extends "settings/base.html.j2" %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item active" aria-current="page">{{ _('Misc.') }}</li>
+{% endblock %}
+
+{% block settings_content %}
+<h1 class="mb-3">{{ _('Misc.') }}</h1>
+
+<form method="POST">
+    <h5 class="mt-4">{{ _('Photo Import') }}</h5>
+    <div class="row mb-3">
+        <div class="col-lg-4">
+            <label for="photo_grace_period_minutes" class="form-label">{{ _('Grace period (minutes)') }}</label>
+            <input type="number" class="form-control" id="photo_grace_period_minutes"
+                name="photo_grace_period_minutes" value="{{ photo_grace_period_minutes }}" min="0" />
+            <div class="form-text">{{ _('Photos taken this many minutes before or after an activity will still be matched to it.') }}</div>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">{{ _('Save') }}</button>
+</form>
+{% endblock %}

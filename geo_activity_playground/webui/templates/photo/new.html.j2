@@ -10,4 +10,42 @@
     </div>
     <button type="submit" class="btn btn-primary">{{ _('Upload') }}</button>
 </form>
+
+<hr class="my-4">
+
+<h2>{{ _('Bulk Upload Photos') }}</h2>
+<p>{{ _('Place your image files in the') }} <code>photo-upload/</code> {{ _('folder inside the playground directory. Then click the button below to start the import. Successfully imported photos are deleted from the folder automatically.') }}</p>
+
+<button id="bulk-import-btn" class="btn btn-secondary">{{ _('Start Bulk Import') }}</button>
+
+<pre id="bulk-import-log" class="mt-3 p-3 bg-dark text-light rounded" style="display:none; max-height: 400px; overflow-y: auto;"></pre>
+
+<script>
+document.getElementById('bulk-import-btn').addEventListener('click', function () {
+    const btn = this;
+    const log = document.getElementById('bulk-import-log');
+    btn.disabled = true;
+    btn.textContent = '{{ _("Importing...") }}';
+    log.style.display = 'block';
+    log.textContent = '';
+
+    const source = new EventSource('{{ url_for("photo.bulk_import") }}');
+    source.onmessage = function (event) {
+        if (event.data === '__done__') {
+            source.close();
+            btn.disabled = false;
+            btn.textContent = '{{ _("Start Bulk Import") }}';
+        } else {
+            log.textContent += event.data + '\n';
+            log.scrollTop = log.scrollHeight;
+        }
+    };
+    source.onerror = function () {
+        source.close();
+        log.textContent += '\nConnection lost.';
+        btn.disabled = false;
+        btn.textContent = '{{ _("Start Bulk Import") }}';
+    };
+});
+</script>
 {% endblock %}

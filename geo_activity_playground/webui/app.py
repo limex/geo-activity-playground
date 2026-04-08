@@ -459,7 +459,7 @@ def web_ui_main(
         import waitress
 
         logger.info("Starting production server (waitress).")
-        waitress.serve(app, host=host, port=port, threads=32)
+        waitress.serve(app, host=host, port=port, threads=32, channel_timeout=180)
 
 
 def _try_get_version():
