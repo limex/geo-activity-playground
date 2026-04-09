@@ -30,7 +30,21 @@
                     });
                 },
                 onEachFeature: function (feature, layer) {
-                    layer.bindPopup(`<a href="${feature.properties.url_full}" target="_blank"><img src="${feature.properties.url_popup}" /></a>`)
+                    const activityLink = feature.properties.url_activity
+                        ? `<a href="${feature.properties.url_activity}" target="_blank" style="position:absolute;top:4px;left:4px;background:rgba(255,255,255,0.85);padding:4px 7px;border-radius:3px;font-size:12px;font-weight:bold;text-decoration:none;color:#333;line-height:normal;">${feature.properties.activity_id}</a>`
+                        : '';
+                    layer.bindPopup(
+                        `<div style="position:relative;line-height:0;">${activityLink}<a href="${feature.properties.url_full}" target="_blank"><img src="${feature.properties.url_popup}" style="display:block;max-width:512px;" /></a></div>`,
+                        { maxWidth: 540 }
+                    );
+                    layer.on('popupopen', function () {
+                        const img = layer.getPopup().getElement().querySelector('img');
+                        if (img && !img.complete) {
+                            img.addEventListener('load', function () {
+                                layer.getPopup().update();
+                            });
+                        }
+                    });
                 }
             })
 

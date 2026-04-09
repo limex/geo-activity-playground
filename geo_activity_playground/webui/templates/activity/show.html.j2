@@ -272,7 +272,18 @@
                             });
                         },
                         onEachFeature: function (feature, layer) {
-                            layer.bindPopup(`<a href="${feature.properties.url_full}" target="_blank"><img src="${feature.properties.url_popup}" /></a>`)
+                            layer.bindPopup(
+                                `<div style="line-height:0;"><a href="${feature.properties.url_full}" target="_blank"><img src="${feature.properties.url_popup}" style="display:block;max-width:512px;" /></a></div>`,
+                                { maxWidth: 540 }
+                            );
+                            layer.on('popupopen', function () {
+                                const img = layer.getPopup().getElement().querySelector('img');
+                                if (img && !img.complete) {
+                                    img.addEventListener('load', function () {
+                                        layer.getPopup().update();
+                                    });
+                                }
+                            });
                         }
                     });
                     let group = L.markerClusterGroup();

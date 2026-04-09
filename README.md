@@ -12,6 +12,14 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.6)
+
+- **Photo map: activity link**: Clicking the photo popup on the photo map now shows the activity ID as a badge in the top-left corner, linking to the activity page (opens in new tab).
+- **Photo map: popup sizing fixed**: Photo popups now correctly size their frame on first open (previously required reopening the popup to render correctly). Fixed on both the global photo map and individual activity pages.
+- **GPS hemisphere bug fixed**: Photos taken west of Greenwich or south of the equator were stored with incorrect (positive) coordinates. EXIF `GPSLongitudeRef`/`GPSLatitudeRef` tags are now respected, correctly negating coordinates for W/S hemispheres.
+
+---
+
 ## Fork Changes (v1.26.5)
 
 - **Photo bulk import**: Drop images into `photo-upload/` inside the playground directory and trigger import via the web UI (Upload Photos page). Imported photos are deleted from the folder automatically; unmatched ones stay for review.

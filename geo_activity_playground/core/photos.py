@@ -34,8 +34,14 @@ def get_metadata_from_image(path: pathlib.Path) -> dict:
         tags = exifread.process_file(f)
     metadata = {}
     try:
-        metadata["latitude"] = ratio_to_decimal(tags["GPS GPSLatitude"])
-        metadata["longitude"] = ratio_to_decimal(tags["GPS GPSLongitude"])
+        lat = ratio_to_decimal(tags["GPS GPSLatitude"])
+        lon = ratio_to_decimal(tags["GPS GPSLongitude"])
+        if str(tags.get("GPS GPSLatitudeRef", "N")) == "S":
+            lat = -lat
+        if str(tags.get("GPS GPSLongitudeRef", "E")) == "W":
+            lon = -lon
+        metadata["latitude"] = lat
+        metadata["longitude"] = lon
     except KeyError:
         pass
     try:

@@ -42,9 +42,15 @@ def make_photo_blueprint(
                     geometry=geojson.Point((photo.longitude, photo.latitude)),
                     properties={
                         "photo_id": photo.id,
+                        "activity_id": photo.activity_id,
                         "url_marker": url_for(".get", id=photo.id, size=128),
                         "url_popup": url_for(".get", id=photo.id, size=512),
                         "url_full": url_for(".get", id=photo.id, size=512),
+                        "url_activity": url_for(
+                            "activity.show", id=photo.activity_id
+                        )
+                        if photo.activity_id
+                        else None,
                     },
                 )
                 for photo in photos
@@ -64,9 +70,11 @@ def make_photo_blueprint(
                     geometry=geojson.Point((photo.longitude, photo.latitude)),
                     properties={
                         "photo_id": photo.id,
+                        "activity_id": activity_id,
                         "url_marker": url_for(".get", id=photo.id, size=128),
                         "url_popup": url_for(".get", id=photo.id, size=512),
                         "url_full": url_for(".get", id=photo.id, size=512),
+                        "url_activity": url_for("activity.show", id=activity_id),
                     },
                 )
                 for photo in activity.photos
