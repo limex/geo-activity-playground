@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run:*)",
+      "Bash(docker-compose restart:*)",
+      "Bash(grep -rn \"tileLayer\\\\|tile/\" /Users/guntherbosch/Sources/geo-activity-playground/geo_activity_playground/webui/static/*.js)"
+    ]
+  }
+}

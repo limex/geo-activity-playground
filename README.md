@@ -12,6 +12,13 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.7)
+
+- **Standalone photo import**: Photos without a matching activity can now be imported when "Import Standalone Photos" is enabled in Settings → Misc. Photos with GPS coordinates but no EXIF timestamp are also accepted under this mode. When the setting is off, unmatched photos are skipped and stay in the upload folder for review — enabling the setting is a deliberate choice to show those photos on the map linked to their GPS position alone.
+- **Configurable map tile styles**: The color transform applied to map tiles (color, pastel, grayscale, etc.) is now configurable per map type in Settings → Tile Source. Three groups can be set independently: standard maps (home, photo map, search, segments), activity detail maps, and track overlay maps (lines, names, day view). Defaults are unchanged.
+
+---
+
 ## Fork Changes (v1.26.6)
 
 - **Photo map: activity link**: Clicking the photo popup on the photo map now shows the activity ID as a badge in the top-left corner, linking to the activity page (opens in new tab).

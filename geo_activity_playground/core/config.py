@@ -55,6 +55,10 @@ class Config:
     map_tile_url: str = "https://tile.openstreetmap.org/{zoom}/{x}/{y}.png"
     map_tile_attribution: str = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> | <a href="https://www.openstreetmap.org/fixthemap">Correct Map</a>'
     photo_grace_period_minutes: int = 10
+    photo_import_standalone: bool = False
+    map_tile_style_standard: str = "color"
+    map_tile_style_activity: str = "pastel"
+    map_tile_style_track: str = "grayscale"
 
 
 # Field names that are valid for Config, used to filter out obsolete fields when loading

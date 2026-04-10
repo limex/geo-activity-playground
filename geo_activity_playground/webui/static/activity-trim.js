@@ -12,6 +12,7 @@ export function initActivityTrimMap(config) {
     const {
         elementId = 'activity-trim-map',
         attribution,
+        tileStyle = 'pastel',
         geojson,
         beginInputId = 'begin',
         endInputId = 'end'
@@ -21,7 +22,7 @@ export function initActivityTrimMap(config) {
         fullscreenControl: true
     });
 
-    L.tileLayer('/tile/pastel/{z}/{x}/{y}.png', {
+    L.tileLayer(`/tile/${tileStyle}/{z}/{x}/{y}.png`, {
         maxZoom: 19,
         attribution
     }).addTo(map);

@@ -138,7 +138,7 @@ class Activity(DB.Model):
     )
 
     photos: Mapped[list["Photo"]] = relationship(
-        back_populates="activity", cascade="all, delete-orphan"
+        back_populates="activity", cascade="all, delete-orphan", single_parent=True
     )
 
     segment_matches: Mapped[list["SegmentMatch"]] = relationship(
@@ -498,14 +498,14 @@ class Photo(DB.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     filename: Mapped[str] = mapped_column(sa.String, nullable=False)
-    time: Mapped[datetime.datetime] = mapped_column(sa.DateTime, nullable=False)
+    time: Mapped[datetime.datetime | None] = mapped_column(sa.DateTime, nullable=True)
     latitude: Mapped[float] = mapped_column(sa.Float, nullable=False)
     longitude: Mapped[float] = mapped_column(sa.Float, nullable=False)
 
-    activity_id: Mapped[int] = mapped_column(
-        ForeignKey("activities.id", name="activity_id"), nullable=False
+    activity_id: Mapped[int | None] = mapped_column(
+        ForeignKey("activities.id", name="activity_id"), nullable=True
     )
-    activity: Mapped["Activity"] = relationship(back_populates="photos")
+    activity: Mapped["Activity | None"] = relationship(back_populates="photos")
 
     @property
     def path(self) -> pathlib.Path:

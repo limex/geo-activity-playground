@@ -974,15 +974,19 @@ def make_settings_blueprint(
     def tile_source() -> str:
         if request.method == "POST":
             config_accessor().map_tile_url = request.form["map_tile_url"]
-            config_accessor().map_tile_attribution = request.form[
-                "map_tile_attribution"
-            ]
+            config_accessor().map_tile_attribution = request.form["map_tile_attribution"]
+            config_accessor().map_tile_style_standard = request.form["map_tile_style_standard"]
+            config_accessor().map_tile_style_activity = request.form["map_tile_style_activity"]
+            config_accessor().map_tile_style_track = request.form["map_tile_style_track"]
             config_accessor.save()
             flasher.flash_message("Tile source updated.", FlashTypes.SUCCESS)
         return render_template(
             "settings/tile-source.html.j2",
             map_tile_url=config_accessor().map_tile_url,
             map_tile_attribution=config_accessor().map_tile_attribution,
+            map_tile_style_standard=config_accessor().map_tile_style_standard,
+            map_tile_style_activity=config_accessor().map_tile_style_activity,
+            map_tile_style_track=config_accessor().map_tile_style_track,
             test_url=config_accessor().map_tile_url.format(zoom=14, x=8514, y=5504),
         )
 
@@ -990,11 +994,13 @@ def make_settings_blueprint(
     def misc():
         if request.method == "POST":
             config_accessor().photo_grace_period_minutes = int(request.form["photo_grace_period_minutes"])
+            config_accessor().photo_import_standalone = "photo_import_standalone" in request.form
             config_accessor.save()
             flasher.flash_message("Settings saved.", FlashTypes.SUCCESS)
         return render_template(
             "settings/misc.html.j2",
             photo_grace_period_minutes=config_accessor().photo_grace_period_minutes,
+            photo_import_standalone=config_accessor().photo_import_standalone,
         )
 
     return blueprint

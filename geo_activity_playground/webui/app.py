@@ -349,6 +349,9 @@ def create_app(
             "version": _try_get_version(),
             "num_activities": len(repository),
             "map_tile_attribution": config_accessor().map_tile_attribution,
+            "map_tile_style_standard": config_accessor().map_tile_style_standard,
+            "map_tile_style_activity": config_accessor().map_tile_style_activity,
+            "map_tile_style_track": config_accessor().map_tile_style_track,
             "request_url": urllib.parse.quote_plus(request.url),
         }
         variables["equipments_avail"] = DB.session.scalars(

@@ -15,7 +15,7 @@
             var map = L.map('activity-day-map', {
                 fullscreenControl: true
             });
-            L.tileLayer('/tile/grayscale/{z}/{x}/{y}.png', {
+            L.tileLayer('/tile/{{ map_tile_style_track }}/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '{{ map_tile_attribution|safe }}'
             }).addTo(map);

@@ -20,7 +20,7 @@
         let map = L.map(id, {
             fullscreenControl: true
         })
-        L.tileLayer('/tile/color/{z}/{x}/{y}.png', {
+        L.tileLayer('/tile/{{ map_tile_style_standard }}/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '{{ map_tile_attribution|safe }}'
         }).addTo(map)

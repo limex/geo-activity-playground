@@ -136,7 +136,11 @@ def make_photo_blueprint(
                 flasher.flash_message(
                     f"Added {len(new_photos)} new photos.", FlashTypes.SUCCESS
                 )
-                return redirect(f"/activity/{new_photos[-1].activity.id}")
+                last = new_photos[-1]
+                if last.activity_id:
+                    return redirect(f"/activity/{last.activity_id}")
+                else:
+                    return redirect(url_for(".map"))
             else:
                 return redirect(url_for(".new"))
         else:

@@ -22,6 +22,44 @@
             value="{{ map_tile_attribution|e }}" />
     </div>
 
+    <h5 class="mt-4">{{ _('Map Styles') }}</h5>
+    <p class="text-muted">{{ _('Choose the color transform applied to tiles for each map type. "Color" means no transform (tiles as-is). Transforms are applied server-side.') }}</p>
+    {% set style_options = [('color', _('Color')), ('pastel', _('Pastel')), ('grayscale', _('Grayscale')), ('inverse_grayscale', _('Inverse Grayscale')), ('blank', _('Blank'))] %}
+
+    <div class="row mb-3">
+        <div class="col-lg-4">
+            <label for="map_tile_style_standard" class="form-label">{{ _('Standard maps') }}</label>
+            <select class="form-select" id="map_tile_style_standard" name="map_tile_style_standard">
+                {% for value, label in style_options %}
+                <option value="{{ value }}" {% if map_tile_style_standard == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <div class="form-text">{{ _('Used for: home, photo map, search, segments, hall of fame.') }}</div>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-lg-4">
+            <label for="map_tile_style_activity" class="form-label">{{ _('Activity map') }}</label>
+            <select class="form-select" id="map_tile_style_activity" name="map_tile_style_activity">
+                {% for value, label in style_options %}
+                <option value="{{ value }}" {% if map_tile_style_activity == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <div class="form-text">{{ _('Used for: activity detail page, trim map.') }}</div>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-lg-4">
+            <label for="map_tile_style_track" class="form-label">{{ _('Track overlay maps') }}</label>
+            <select class="form-select" id="map_tile_style_track" name="map_tile_style_track">
+                {% for value, label in style_options %}
+                <option value="{{ value }}" {% if map_tile_style_track == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <div class="form-text">{{ _('Used for: activity lines, names, and day view — maps where the GPS track is the focus.') }}</div>
+        </div>
+    </div>
+
     <button type="submit" class="btn btn-primary">{{ _('Save') }}</button>
 </form>
 

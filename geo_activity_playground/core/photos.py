@@ -81,35 +81,49 @@ def process_photo(source_path: pathlib.Path, config_accessor: ConfigAccessor | N
     """
     metadata = get_metadata_from_image(source_path)
 
-    if "time" not in metadata:
-        return None, f"'{source_path.name}' has no EXIF DateTimeOriginal and cannot be dated."
-    time: datetime.datetime = metadata["time"]
-
+    time: datetime.datetime | None = metadata.get("time")
     grace = datetime.timedelta(minutes=config_accessor().photo_grace_period_minutes if config_accessor else 10)
 
-    activity = DB.session.scalar(
-        sqlalchemy.select(Activity)
-        .where(
-            Activity.start.is_not(None),
-            Activity.elapsed_time.is_not(None),
-            Activity.start <= time + grace,
+    activity = None
+    no_activity = True
+
+    if time is not None:
+        activity = DB.session.scalar(
+            sqlalchemy.select(Activity)
+            .where(
+                Activity.start.is_not(None),
+                Activity.elapsed_time.is_not(None),
+                Activity.start <= time + grace,
+            )
+            .order_by(Activity.start.desc())
+            .limit(1)
         )
-        .order_by(Activity.start.desc())
-        .limit(1)
-    )
-    if (
-        activity is None
-        or activity.start_utc - grace > time
-        or activity.start_utc + activity.elapsed_time + grace < time
-    ):
-        return None, f"'{source_path.name}' is from {time} but no matching activity was found."
+        no_activity = (
+            activity is None
+            or activity.start_utc is None
+            or activity.elapsed_time is None
+            or activity.start_utc - grace > time
+            or activity.start_utc + activity.elapsed_time + grace < time
+        )
 
-    existing = DB.session.scalar(sqlalchemy.select(Photo).where(Photo.time == time))
-    if existing:
-        source_path.unlink(missing_ok=True)
-        return None, f"'{source_path.name}' already imported (duplicate timestamp {time}), deleted from upload folder."
+    if no_activity:
+        standalone_enabled = config_accessor and config_accessor().photo_import_standalone
+        if not standalone_enabled:
+            if time is None:
+                return None, f"'{source_path.name}' has no EXIF DateTimeOriginal and cannot be dated."
+            else:
+                return None, f"'{source_path.name}' is from {time} but no matching activity was found."
+        if "latitude" not in metadata:
+            return None, f"'{source_path.name}' has no GPS coordinates and no matching activity — cannot import as standalone."
+        activity = None
 
-    if "latitude" not in metadata:
+    if time is not None:
+        existing = DB.session.scalar(sqlalchemy.select(Photo).where(Photo.time == time))
+        if existing:
+            source_path.unlink(missing_ok=True)
+            return None, f"'{source_path.name}' already imported (duplicate timestamp {time}), deleted from upload folder."
+
+    if not no_activity and "latitude" not in metadata:
         time_series = activity.time_series
         row = time_series.loc[time_series["time"] >= time].iloc[0]
         metadata["latitude"] = row["latitude"]
@@ -180,7 +194,11 @@ def import_photos_from_folder(basedir: pathlib.Path, config_accessor: ConfigAcce
             msg = f"SKIP  {path.name}: {error}"
             logger.warning(msg)
         else:
-            msg = f"OK    {path.name} → activity {photo.activity_id} - '{photo.activity.name}'"
+            if photo.activity_id:
+                activity_info = f"activity {photo.activity_id} - '{photo.activity.name}'"
+            else:
+                activity_info = "standalone"
+            msg = f"OK    {path.name} → {activity_info}"
             logger.info(msg)
             success += 1
         yield msg

@@ -101,7 +101,7 @@
             var map = L.map('activity-show-map', {
                 fullscreenControl: true
             });
-            L.tileLayer('/tile/pastel/{z}/{x}/{y}.png', {
+            L.tileLayer('/tile/{{ map_tile_style_activity }}/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '{{ map_tile_attribution|safe }}'
             }).addTo(map);
@@ -460,7 +460,7 @@
 
         const map = L.map(container, { fullscreenControl: true });
 
-        L.tileLayer('/tile/color/{z}/{x}/{y}.png', {
+        L.tileLayer('/tile/{{ map_tile_style_standard }}/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution
         }).addTo(map);
