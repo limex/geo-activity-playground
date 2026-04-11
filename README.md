@@ -12,6 +12,13 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.8)
+
+- **Map tile cache: clear via UI**: A new "Map Tile Cache" card in Settings → Maintenance lets you delete all cached OSM tiles with one click. Useful when tiles look outdated or to reclaim disk space — tiles are re-downloaded on demand.
+- **Photo thumbnail quality**: WebP thumbnails are now saved at quality=95 (previously Pillow default ~80), preserving more detail in map markers and photo previews.
+
+---
+
 ## Fork Changes (v1.26.7)
 
 - **Standalone photo import**: Photos without a matching activity can now be imported when "Import Standalone Photos" is enabled in Settings → Misc. Photos with GPS coordinates but no EXIF timestamp are also accepted under this mode. When the setting is off, unmatched photos are skipped and stay in the upload folder for review — enabling the setting is a deliberate choice to show those photos on the map linked to their GPS position alone.

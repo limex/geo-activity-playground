@@ -9,6 +9,23 @@
 
 <div class="card border-warning mb-3">
     <div class="card-header bg-warning text-dark">
+        <h5 class="card-title mb-0">{{ _('Map Tile Cache') }}</h5>
+    </div>
+    <div class="card-body">
+        <p class="card-text">
+            {{ _('Map tiles from the configured tile server are cached on disk to avoid repeated downloads. Clear this cache if map tiles look outdated or if you want to free up disk space. Tiles will be re-downloaded on demand.') }}
+        </p>
+        <form method="POST" onsubmit="return confirm('{{ _('Are you sure you want to clear the map tile cache? All cached tiles will be deleted and re-downloaded on demand.') }}');">
+            <input type="hidden" name="action" value="clear_osm_tile_cache">
+            <button type="submit" class="btn btn-warning">
+                {{ _('Clear map tile cache') }}
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="card border-warning mb-3">
+    <div class="card-header bg-warning text-dark">
         <h5 class="card-title mb-0">{{ _('Explorer Tiles') }}</h5>
     </div>
     <div class="card-body">

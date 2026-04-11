@@ -265,6 +265,15 @@ def make_settings_blueprint(
                     _("Tile visit state has been reset and re-indexed."),
                     FlashTypes.SUCCESS,
                 )
+            elif action == "clear_osm_tile_cache":
+                logger.info("User requested clear of OSM tile cache.")
+                osm_tile_dir = pathlib.Path("Open Street Map Tiles")
+                if osm_tile_dir.exists():
+                    shutil.rmtree(osm_tile_dir)
+                flasher.flash_message(
+                    _("OSM tile cache has been cleared."),
+                    FlashTypes.SUCCESS,
+                )
             elif action == "reset_heatmap_cache":
                 logger.info("User requested reset of heatmap cache.")
                 dropped = delete_all_heatmap_cache()

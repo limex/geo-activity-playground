@@ -143,7 +143,7 @@ def process_photo(source_path: pathlib.Path, config_accessor: ConfigAccessor | N
             thumb_path = PHOTOS_DIR() / f"size-{size}" / webp_filename
             thumb_path.parent.mkdir(exist_ok=True)
             thumb = ImageOps.contain(im, (size, size))
-            thumb.save(thumb_path)
+            thumb.save(thumb_path, quality=95)
     original_path.unlink()
 
     photo = Photo(
