@@ -83,6 +83,20 @@ def make_search_blueprint(authenticator: Authenticator, config: Config) -> Bluep
             register_search_query(primitives)
 
         activities = apply_search_filter(primitives)
+
+        bbox = request.args.get("bbox")
+        if bbox:
+            try:
+                min_lat, min_lon, max_lat, max_lon = (
+                    float(x) for x in bbox.split(",")
+                )
+                mask = activities["start_latitude"].between(
+                    min_lat, max_lat
+                ) & activities["start_longitude"].between(min_lon, max_lon)
+                activities = activities[mask]
+            except (ValueError, KeyError):
+                bbox = None
+
         total = len(activities)
         total_pages = math.ceil(total / per_page) if total else 1
         page = min(page, total_pages) if total_pages else 1
@@ -115,6 +129,15 @@ def make_search_blueprint(authenticator: Authenticator, config: Config) -> Bluep
             float(activities["elevation_gain"].fillna(0).sum()) if total else 0.0
         )
 
+        zoom = request.args.get("zoom", type=int)
+        lat = request.args.get("lat", type=float)
+        lon = request.args.get("lon", type=float)
+        initial_view = (
+            {"zoom": zoom, "lat": lat, "lon": lon}
+            if zoom is not None and lat is not None and lon is not None
+            else None
+        )
+
         return render_template(
             "search/map.html.j2",
             activities_page=activities_page,
@@ -132,12 +155,29 @@ def make_search_blueprint(authenticator: Authenticator, config: Config) -> Bluep
             query=primitives_to_jinja(primitives),
             search_query_favorites=search_query_favorites,
             search_query_last=search_query_last,
+            active_bbox=bbox,
+            search_map_card_allow_zoom=config.search_map_card_allow_zoom,
+            initial_view=initial_view,
         )
 
     @blueprint.route("/map/aggregate.geojson")
     def map_aggregate_geojson() -> ResponseReturnValue:
         primitives = parse_search_params(request.args)
         activities = apply_search_filter(primitives).iloc[::-1]
+
+        bbox = request.args.get("bbox")
+        if bbox:
+            try:
+                min_lat, min_lon, max_lat, max_lon = (
+                    float(x) for x in bbox.split(",")
+                )
+                mask = activities["start_latitude"].between(
+                    min_lat, max_lat
+                ) & activities["start_longitude"].between(min_lon, max_lon)
+                activities = activities[mask]
+            except (ValueError, KeyError):
+                pass
+
         activity_ids = activities["id"].head(aggregate_map_activity_cap).tolist()
         features = []
         cmap = colormaps["Dark2"]

@@ -27,6 +27,12 @@
             <span class="badge text-bg-secondary">Not connected</span>
             {% endif %}
         </p>
+
+        {% if strava_client_code %}
+        <form action="{{ url_for('settings.strava_disconnect') }}" method="POST">
+            <button type="submit" class="btn btn-outline-danger btn-sm">Disconnect from Strava</button>
+        </form>
+        {% endif %}
     </div>
 
     <div class="col-lg-6">

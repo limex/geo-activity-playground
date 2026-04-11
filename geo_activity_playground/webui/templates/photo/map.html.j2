@@ -3,15 +3,41 @@
 {% block container %}
 <h1>{{ _('Photo Map') }}</h1>
 
+{% if external_map_url %}
+<div class="d-flex justify-content-end mb-2">
+    <a id="external-map-link" href="#" target="_blank" class="btn btn-sm btn-outline-secondary">{{ _('External Map') }}</a>
+</div>
+{% endif %}
+
 <div id="photo-map" style="height: 800px;" class="mb-3"></div>
 <script>
     var map = L.map('photo-map', {
         fullscreenControl: true
     });
+    L.control.locate({ position: 'topleft' }).addTo(map);
     L.tileLayer('/tile/{{ map_tile_style_standard }}/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '{{ map_tile_attribution|safe }}'
     }).addTo(map);
+
+    {% if external_map_url %}
+    const externalMapBaseUrl = {{ external_map_url | tojson }};
+
+    function updateExternalMapLink() {
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        const lat = center.lat.toFixed(5);
+        const lon = center.lng.toFixed(5);
+        const link = document.getElementById('external-map-link');
+        if (!link) return;
+        link.href = externalMapBaseUrl
+            .replace('{zoom}', zoom)
+            .replace('{lat}', lat)
+            .replace('{lon}', lon);
+    }
+
+    map.on('moveend zoomend', updateExternalMapLink);
+    {% endif %}
 
     fetch("{{ url_for('photo.map_for_all') }}")
         .then(function (response) {
@@ -52,7 +78,12 @@
             group.addLayer(layer)
 
             group.addTo(map);
+            {% if initial_view %}
+            map.setView([{{ initial_view.lat }}, {{ initial_view.lon }}], {{ initial_view.zoom }});
+            {% else %}
             map.fitBounds(group.getBounds());
+            {% endif %}
+            {% if external_map_url %}updateExternalMapLink();{% endif %}
         });
 </script>
 

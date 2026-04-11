@@ -31,7 +31,15 @@ def make_photo_blueprint(
 
     @blueprint.route("/map")
     def map() -> str:
-        return render_template("photo/map.html.j2")
+        zoom = request.args.get("zoom", type=int)
+        lat = request.args.get("lat", type=float)
+        lon = request.args.get("lon", type=float)
+        initial_view = (
+            {"zoom": zoom, "lat": lat, "lon": lon}
+            if zoom is not None and lat is not None and lon is not None
+            else None
+        )
+        return render_template("photo/map.html.j2", initial_view=initial_view)
 
     @blueprint.route("/map-for-all/photos.geojson")
     def map_for_all() -> Response:

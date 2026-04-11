@@ -199,8 +199,11 @@ def make_activity_blueprint(
 
     @blueprint.route("/<int:id>/line.geojson")
     def geojson_line(id: int) -> ResponseReturnValue:
-        return make_geojson_from_time_series(
-            DB.session.get_one(Activity, id).time_series
+        return Response(
+            make_geojson_from_time_series(
+                DB.session.get_one(Activity, id).time_series
+            ),
+            mimetype="application/json",
         )
 
     @blueprint.route("/<int:id>/sharepic.png")

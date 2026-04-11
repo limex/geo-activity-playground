@@ -12,6 +12,23 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.9)
+
+- **Search map overhaul**: The aggregate map on the search map view is now 720 px tall (was 360 px). Activity stats (count, distance, elevation, time) are now shown inline in a compact bar instead of four large cards, freeing up vertical space.
+- **Map view filter**: A new "Map view filters activity cards" checkbox on the search map lets you show only activities whose start point lies within the current map viewport. Pair it with "Refresh Cards" to reload the paginated card grid for the visible area. The bounding box is reflected in the URL so filtered views are bookmarkable.
+- **Locate control**: A "find my location" button (GPS crosshair) is now shown on the aggregate search map and the photo map, powered by the bundled Leaflet Locate plugin.
+- **External map link**: Configure an external map URL (e.g. OpenStreetMap) in Settings → Maps. A button appears on the search map and photo map that opens the external map at the current center and zoom. Supports `{zoom}`, `{lat}`, `{lon}` placeholders.
+- **Activity card maps**: Small route maps on activity cards (search map view and Hall of Fame) are now non-interactive (no zoom/pan) by default to avoid accidental scroll-hijack. An optional setting in Settings → Maps re-enables interaction when desired.
+- **Search filter state persisted**: The activity filter panel's open/closed state is now saved in `localStorage` and restored on next visit.
+- **GeoJSON fix**: Activity route GeoJSON (`/activity/<id>/line.geojson`) was previously returning bare `LineString` geometries; now correctly returns `FeatureCollection` with `Feature` wrappers, fixing map rendering in Hall of Fame card maps.
+- **Empty search result fix**: `query_activity_meta` no longer crashes when the result set is empty — column names are now derived statically instead of from the first row.
+- **Search: deprecated kinds hidden**: Activity kind aliases (replaced/merged kinds) are no longer shown in the kind filter dropdown.
+- **Shutdown moved to Maintenance**: The "Shutdown Server" action is removed from the top-right navigation dropdown and moved to Settings → Maintenance, with a contextual explanation of what happens in Docker vs. native mode. The shutdown itself now runs in a background thread with a short delay so the HTTP 204 response is delivered before the process exits.
+- **Strava disconnect button**: A "Disconnect from Strava" button is now shown on the Strava settings page when a client code is stored.
+- **Settings → Maps rename**: The "Map Tile Source" settings section is renamed to "Maps" to reflect that it now covers more than just the tile URL.
+
+---
+
 ## Fork Changes (v1.26.8)
 
 - **Map tile cache: clear via UI**: A new "Map Tile Cache" card in Settings → Maintenance lets you delete all cached OSM tiles with one click. Useful when tiles look outdated or to reclaim disk space — tiles are re-downloaded on demand.

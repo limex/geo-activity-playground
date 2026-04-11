@@ -8,68 +8,40 @@
     {% include "search_form.html.j2" %}
 </div>
 
-<p class="mb-2">
+<div class="d-flex flex-wrap align-items-center gap-3 mb-3">
     <a href="{{ url_for('search.index') }}?{{ base_query_str }}">{{ _('Table view') }}</a>
-</p>
-
-<div class="row row-cols-1 row-cols-md-4 g-3 mb-3">
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="text-body-secondary small">{{ _('Activities') }}</div>
-                <div class="fs-4 fw-semibold">{{ total }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="text-body-secondary small">{{ _('Total distance') }}</div>
-                <div class="fs-4 fw-semibold">{{ '%.1f'|format(total_distance_km) }} km</div>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="text-body-secondary small">{{ _('Total elevation gain') }}</div>
-                <div class="fs-4 fw-semibold">{{ '%.0f'|format(total_elevation_gain_m) }} m</div>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="text-body-secondary small">{{ _('Total elapsed time') }}</div>
-                <div class="fs-4 fw-semibold">{{ total_elapsed_time|td }}</div>
-            </div>
-        </div>
-    </div>
+    <span class="text-body-secondary">|</span>
+    <span class="small"><span class="text-body-secondary">{{ _('Activities') }}:</span> <strong>{{ total }}</strong></span>
+    <span class="small"><span class="text-body-secondary">{{ _('Distance') }}:</span> <strong>{{ '%.1f'|format(total_distance_km) }} km</strong></span>
+    <span class="small"><span class="text-body-secondary">{{ _('Elevation') }}:</span> <strong>{{ '%.0f'|format(total_elevation_gain_m) }} m</strong></span>
+    <span class="small"><span class="text-body-secondary">{{ _('Time') }}:</span> <strong>{{ total_elapsed_time|td }}</strong></span>
 </div>
 
 {% if aggregate_map_count > 0 %}
 <div class="card mb-4">
     <div class="card-body">
-        <h2 class="h5 mb-2">{{ _('Aggregate map overview') }}</h2>
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h2 class="h5 mb-0">{{ _('Aggregate map overview') }}</h2>
+            <div class="d-flex align-items-center gap-2">
+                <div class="form-check mb-0">
+                    <input class="form-check-input" type="checkbox" id="filter-by-map-view"{% if active_bbox %} checked{% endif %}>
+                    <label class="form-check-label small" for="filter-by-map-view">{{ _('Map view filters activity cards') }}</label>
+                </div>
+                <button id="refresh-cards-btn" class="btn btn-sm btn-outline-secondary"{% if not active_bbox %} style="display:none"{% endif %}>{{ _('Refresh Cards') }}</button>
+                {% if external_map_url %}<a id="external-map-link" href="#" target="_blank" class="btn btn-sm btn-outline-secondary">{{ _('External Map') }}</a>{% endif %}
+            </div>
+        </div>
         <p class="text-body-secondary mb-3">
             {{ _('Showing latest') }} {{ aggregate_map_count }} {{ _('activities on one map.') }}
         </p>
-        <div id="map-aggregate" style="height: 360px; width: 100%;"></div>
+        <div id="map-aggregate" style="height: 720px; width: 100%;"></div>
     </div>
 </div>
 {% endif %}
 
 <script>
-    function add_map(id, geojson, options = {}) {
-        let map = L.map(`map-${id}`, {
-            fullscreenControl: true
-        })
-        L.tileLayer('/tile/{{ map_tile_style_standard }}/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '{{ map_tile_attribution|safe }}'
-        }).addTo(map)
-
-        let geojson_layer = L.geoJSON(geojson, {
+    function makeGeoJsonLayer(geojson, options = {}) {
+        return L.geoJSON(geojson, {
             style: feature => {
                 if (feature?.geometry?.type === "LineString") {
                     return {
@@ -88,53 +60,202 @@
                     });
                 }
                 return L.circleMarker(latlng);
-            }
+            },
+            onEachFeature: options.onEachFeature || null
+        });
+    }
+
+    const cardMapsInteractive = {{ 'true' if search_map_card_allow_zoom else 'false' }};
+
+    function add_map(id, geojson, options = {}) {
+        const interactive = options.interactive !== false;
+        let map = L.map(`map-${id}`, {
+            fullscreenControl: interactive,
+            zoomControl: interactive,
+            dragging: interactive,
+            scrollWheelZoom: interactive,
+            doubleClickZoom: interactive,
+            touchZoom: interactive,
+            keyboard: interactive,
+        })
+        L.tileLayer('/tile/{{ map_tile_style_standard }}/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '{{ map_tile_attribution|safe }}'
         }).addTo(map)
-        if (geojson_layer.getLayers().length > 0) {
-            map.fitBounds(geojson_layer.getBounds(), { padding: [10, 10] })
+
+        let layer = makeGeoJsonLayer(geojson, options).addTo(map)
+        if (layer.getLayers().length > 0) {
+            map.fitBounds(layer.getBounds(), { padding: [10, 10] })
         }
-        return map
+        return { map, layer }
     }
 </script>
 
+{% if external_map_url %}
+<script>
+    const externalMapBaseUrl = {{ external_map_url | tojson }};
+
+    function updateExternalMapLink(map) {
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        const lat = center.lat.toFixed(5);
+        const lon = center.lng.toFixed(5);
+        const link = document.getElementById('external-map-link');
+        if (!link) return;
+        link.href = externalMapBaseUrl
+            .replace('{zoom}', zoom)
+            .replace('{lat}', lat)
+            .replace('{lon}', lon);
+    }
+</script>
+{% endif %}
+
 {% if aggregate_map_count > 0 %}
 <script>
-    fetch("{{ url_for('search.map_aggregate_geojson') }}?{{ base_query_str }}")
-        .then(response => response.json())
+    let aggregateMap = null;
+    let aggregateGeoJsonLayer = null;
+
+    const aggregateLayerOptions = {
+        weight: 3,
+        opacity: 0.8,
+        onEachFeature: (feature, layer) => {
+            const id = feature?.properties?.activity_id;
+            const name = feature?.properties?.activity_name;
+            if (id && name) {
+                layer.bindTooltip(`#${id} · ${name}`, { sticky: true });
+                layer.on('click', () => window.open(`/activity/${id}`, '_blank'));
+            }
+        }
+    };
+
+    function applyMapViewFilter() {
+        const checkbox = document.getElementById('filter-by-map-view');
+        const cards = document.querySelectorAll('[data-activity-id]');
+        if (!checkbox.checked || !aggregateMap) {
+            cards.forEach(el => {
+                el.style.width = '';
+                el.style.padding = '';
+                el.style.overflow = '';
+            });
+            return;
+        }
+        const bounds = aggregateMap.getBounds();
+        cards.forEach(el => {
+            const lat = parseFloat(el.dataset.lat);
+            const lon = parseFloat(el.dataset.lon);
+            const visible = isNaN(lat) || bounds.contains(L.latLng(lat, lon));
+            el.style.width = visible ? '' : '0';
+            el.style.padding = visible ? '' : '0';
+            el.style.overflow = visible ? '' : 'hidden';
+        });
+    }
+
+    function buildAggregateUrl(withBbox = false) {
+        let url = "{{ url_for('search.map_aggregate_geojson') }}?{{ base_query_str }}";
+        if (withBbox && aggregateMap) {
+            const b = aggregateMap.getBounds();
+            url += `&bbox=${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
+        }
+        return url;
+    }
+
+    function refreshAggregateLayer() {
+        const filtered = document.getElementById('filter-by-map-view').checked;
+        fetch(buildAggregateUrl(filtered))
+            .then(r => r.json())
+            .then(geojson => {
+                if (aggregateGeoJsonLayer) aggregateMap.removeLayer(aggregateGeoJsonLayer);
+                aggregateGeoJsonLayer = makeGeoJsonLayer(geojson, aggregateLayerOptions).addTo(aggregateMap);
+            });
+    }
+
+    function swapCards(url) {
+        fetch(url.toString())
+            .then(r => r.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const newCards = doc.getElementById('activity-cards');
+                const currentCards = document.getElementById('activity-cards');
+                if (currentCards && newCards) {
+                    currentCards.replaceWith(newCards);
+                    newCards.querySelectorAll('script').forEach(s => {
+                        const script = document.createElement('script');
+                        script.textContent = s.textContent;
+                        s.replaceWith(script);
+                    });
+                    applyMapViewFilter();
+                }
+                history.pushState({}, '', url.toString());
+            });
+    }
+
+    document.getElementById('filter-by-map-view').addEventListener('change', () => {
+        const checked = document.getElementById('filter-by-map-view').checked;
+        document.getElementById('refresh-cards-btn').style.display = checked ? '' : 'none';
+        refreshAggregateLayer();
+        applyMapViewFilter();
+        if (!checked) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('bbox');
+            swapCards(url);
+        }
+    });
+
+    document.getElementById('refresh-cards-btn').addEventListener('click', () => {
+        const b = aggregateMap.getBounds();
+        const bbox = `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
+        const url = new URL(window.location.href);
+        url.searchParams.set('bbox', bbox);
+        swapCards(url);
+    });
+
+    fetch(buildAggregateUrl())
+        .then(r => r.json())
         .then(geojson => {
-            add_map("aggregate", geojson, { weight: 3, opacity: 0.8 });
+            const result = add_map("aggregate", geojson, aggregateLayerOptions);
+            aggregateMap = result.map;
+            aggregateGeoJsonLayer = result.layer;
+            L.control.locate({ position: 'topleft' }).addTo(aggregateMap);
+            {% if initial_view %}
+            aggregateMap.setView([{{ initial_view.lat }}, {{ initial_view.lon }}], {{ initial_view.zoom }});
+            {% endif %}
+            {% if external_map_url %}updateExternalMapLink(aggregateMap);{% endif %}
+            aggregateMap.on('moveend zoomend', () => {
+                if (document.getElementById('filter-by-map-view').checked) {
+                    refreshAggregateLayer();
+                }
+                applyMapViewFilter();
+                {% if external_map_url %}updateExternalMapLink(aggregateMap);{% endif %}
+            });
         });
 </script>
 {% endif %}
 
 {% if activities_page %}
-{% for activity_batch in activities_page|batch(3) %}
-<div class="row row-cols-1 row-cols-md-3 g-4 mb-3">
-    {% for index, activity in activity_batch %}
-    <div class="col">
+<div id="activity-cards" class="row row-cols-1 row-cols-md-3 g-4 mb-3">
+    {% for index, activity in activities_page %}
+    <div class="col" data-activity-id="{{ activity['id'] }}"{% if activity['start_latitude'] is defined and not activity['start_latitude']|isna %} data-lat="{{ activity['start_latitude'] }}" data-lon="{{ activity['start_longitude'] }}"{% endif %}>
         <div class="card">
             <div class="card-img-top" id="map-{{ activity['id'] }}" style="height: 200px; width: 100%;"></div>
             <script>
                 fetch("/activity/{{ activity['id'] }}/line.geojson").then(response => response.json()).then(
                     geojson => {
-                        add_map("{{ activity['id'] }}", geojson);
+                        add_map("{{ activity['id'] }}", geojson, { interactive: cardMapsInteractive });
                     }
                 )
             </script>
             <div class="card-body">
                 <a href="{{ url_for('activity.show', id=activity['id']) }}">
-                    <h5 class="card-title">{{ activity['name'] }}</h5>
+                    <h6 class="card-title">{{ activity['name'] }}</h6>
                 </a>
-                <p class="card-text">{{ activity['equipment'] }} · {{ activity['kind'] }}</p>
-                {% if activity['start_local'] is defined and not activity['start_local']|isna %}
-                <p class="card-text"><small class="text-body-secondary">{{ activity['start_local']|dt }} {{ activity['iana_timezone'] }}</small></p>
-                {% endif %}
+                <p class="card-text">
+                    <small class="text-body-secondary">{{ activity['equipment'] }} · {{ activity['kind'] }}{% if activity['start_local'] is defined and not activity['start_local']|isna %} · {{ activity['start_local']|dt }}{% endif %}</small>
+                </p>
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
-{% endfor %}
 
 {% if total_pages > 1 %}
 <nav aria-label="{{ _('Pagination') }}" class="mt-3">

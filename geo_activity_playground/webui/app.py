@@ -313,7 +313,7 @@ def create_app(
             config,
         ),
         "/export": make_export_blueprint(authenticator),
-        "/hall-of-fame": make_hall_of_fame_blueprint(repository, authenticator),
+        "/hall-of-fame": make_hall_of_fame_blueprint(repository, authenticator, config),
         "/heatmap": make_heatmap_blueprint(
             repository, tile_visit_accessor, config, authenticator
         ),
@@ -352,13 +352,16 @@ def create_app(
             "map_tile_style_standard": config_accessor().map_tile_style_standard,
             "map_tile_style_activity": config_accessor().map_tile_style_activity,
             "map_tile_style_track": config_accessor().map_tile_style_track,
+            "external_map_url": config_accessor().external_map_url,
             "request_url": urllib.parse.quote_plus(request.url),
         }
         variables["equipments_avail"] = DB.session.scalars(
             sqlalchemy.select(Equipment).order_by(Equipment.name)
         ).all()
         variables["kinds_avail"] = DB.session.scalars(
-            sqlalchemy.select(Kind).order_by(Kind.name)
+            sqlalchemy.select(Kind)
+            .where(Kind.replaced_by_id == None)
+            .order_by(Kind.name)
         ).all()
         variables["tags_avail"] = DB.session.scalars(
             sqlalchemy.select(Tag).order_by(Tag.tag)

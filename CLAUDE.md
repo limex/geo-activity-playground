@@ -2,6 +2,10 @@
 
 These are the instructions for an LLM coding agent.
 
+## ALWAYS
+
+- **After any file change (Python, Jinja2 templates, JS, CSS) — always rebuild: `docker-compose up --build -d`**. Never use `docker-compose restart` alone; templates and source are baked into the image, not mounted at runtime.
+
 This project is a Flask application that uses SQLAlchemy for persistence.
 
 Use modern Python syntax with type annotations.
@@ -26,11 +30,6 @@ docker-compose up --build -d
 View logs:
 ```bash
 docker-compose logs -f geo-activity-playground
-```
-
-Restart without rebuild (config/template changes only):
-```bash
-docker-compose restart geo-activity-playground
 ```
 
 The container mounts `./playground/` as `/data` (database, activities, photos, cache).  

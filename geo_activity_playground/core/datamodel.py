@@ -296,7 +296,14 @@ def query_activity_meta(clauses: list | None = None) -> pd.DataFrame:
         .where(*clauses)
         .order_by(Activity.start)
     ).all()
-    df = pd.DataFrame(rows, columns=rows[0]._fields if rows else [])
+    columns = [
+        "id", "name", "path", "distance_km", "start", "iana_timezone",
+        "elapsed_time", "moving_time", "start_latitude", "start_longitude",
+        "end_latitude", "end_longitude", "elevation_gain", "start_elevation",
+        "end_elevation", "calories", "steps", "num_new_tiles_14",
+        "num_new_tiles_17", "consider_for_achievements", "equipment", "kind",
+    ]
+    df = pd.DataFrame(rows, columns=rows[0]._fields if rows else columns)
 
     if len(df):
         # If the search yields only activities without time information, the dtype isn't derived correctly.

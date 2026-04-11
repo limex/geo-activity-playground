@@ -7,6 +7,27 @@
 {% block settings_content %}
 <h1 class="mb-3">{{ _('Technical Maintenance') }}</h1>
 
+<div class="card border-danger mb-3">
+    <div class="card-header bg-danger text-white">
+        <h5 class="card-title mb-0">{{ _('Shutdown Server') }}</h5>
+    </div>
+    <div class="card-body">
+        <p class="card-text">
+            {{ _('Stops the application server immediately. What happens next depends on how the server is running:') }}
+        </p>
+        <ul>
+            <li>{{ _('<strong>Running natively</strong> (direct Python): the process exits and the server stops. You must restart it manually.') }}</li>
+            <li>{{ _('<strong>Running in Docker</strong>: the container exits. If the restart policy is <code>always</code> or <code>unless-stopped</code> (the default in this project), Docker will start a fresh container automatically within seconds.') }}</li>
+        </ul>
+        <form action="{{ url_for('admin.shutdown') }}" method="POST"
+            onsubmit="return confirm('{{ _('Are you sure you want to shut down the server?') }}');">
+            <button type="submit" class="btn btn-danger">
+                {{ _('Shutdown Server') }}
+            </button>
+        </form>
+    </div>
+</div>
+
 <div class="card border-warning mb-3">
     <div class="card-header bg-warning text-dark">
         <h5 class="card-title mb-0">{{ _('Map Tile Cache') }}</h5>

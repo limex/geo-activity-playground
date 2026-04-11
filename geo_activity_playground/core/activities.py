@@ -88,8 +88,10 @@ def make_geojson_from_time_series(time_series: pd.DataFrame) -> str:
     features = []
     for _, group in time_series.groupby("segment_id"):
         features.append(
-            geojson.LineString(
-                [(lon, lat) for lat, lon in zip(group["latitude"], group["longitude"])]
+            geojson.Feature(
+                geometry=geojson.LineString(
+                    [(lon, lat) for lat, lon in zip(group["latitude"], group["longitude"])]
+                )
             )
         )
 

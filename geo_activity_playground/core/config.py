@@ -59,6 +59,8 @@ class Config:
     map_tile_style_standard: str = "color"
     map_tile_style_activity: str = "pastel"
     map_tile_style_track: str = "grayscale"
+    search_map_card_allow_zoom: bool = False
+    external_map_url: str = ""
 
 
 # Field names that are valid for Config, used to filter out obsolete fields when loading

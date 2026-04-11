@@ -155,3 +155,30 @@
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        const collapseEl = document.getElementById('search_form');
+        if (!collapseEl) return;
+
+        const KEY = 'activity-filter-open';
+        const saved = localStorage.getItem(KEY);
+
+        if (saved !== null) {
+            // Override server-rendered initial state with the user's last manual choice.
+            const apply = () => {
+                const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+                if (saved === 'open') bsCollapse.show();
+                else bsCollapse.hide();
+            };
+            if (typeof bootstrap !== 'undefined') {
+                apply();
+            } else {
+                document.addEventListener('DOMContentLoaded', apply);
+            }
+        }
+
+        collapseEl.addEventListener('show.bs.collapse', () => localStorage.setItem(KEY, 'open'));
+        collapseEl.addEventListener('hide.bs.collapse', () => localStorage.setItem(KEY, 'closed'));
+    })();
+</script>

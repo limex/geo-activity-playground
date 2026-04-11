@@ -10,15 +10,27 @@
 
 <script>
     function add_map(id, geojson) {
+        const interactive = {{ 'true' if search_map_card_allow_zoom else 'false' }};
         let map = L.map(`map-${id}`, {
-            fullscreenControl: true
+            fullscreenControl: interactive,
+            zoomControl: interactive,
+            scrollWheelZoom: interactive,
+            doubleClickZoom: interactive,
+            touchZoom: interactive,
+            dragging: interactive,
         })
         L.tileLayer('/tile/{{ map_tile_style_standard }}/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '{{ map_tile_attribution|safe }}'
         }).addTo(map)
 
-        let geojson_layer = L.geoJSON(geojson).addTo(map)
+        let geojson_layer = L.geoJSON(geojson, {
+            pointToLayer: function (feature, latlng) {
+                return L.marker(latlng, {
+                    icon: window.progressMarkerIcon(feature?.properties?.marker_progress)
+                });
+            }
+        }).addTo(map)
         map.fitBounds(geojson_layer.getBounds())
         return map
     }

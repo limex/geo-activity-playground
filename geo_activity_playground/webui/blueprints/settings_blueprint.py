@@ -878,6 +878,13 @@ def make_settings_blueprint(
         strava_login_helper.save_strava_code(code)
         return redirect(url_for(".strava"))
 
+    @blueprint.route("/strava-disconnect", methods=["POST"])
+    def strava_disconnect():
+        config_accessor().strava_client_code = None
+        config_accessor.save()
+        flash(_("Disconnected from Strava API."), category="success")
+        return redirect(url_for(".strava"))
+
     @blueprint.route("/tags")
     def tags_list():
         return render_template(
@@ -987,6 +994,8 @@ def make_settings_blueprint(
             config_accessor().map_tile_style_standard = request.form["map_tile_style_standard"]
             config_accessor().map_tile_style_activity = request.form["map_tile_style_activity"]
             config_accessor().map_tile_style_track = request.form["map_tile_style_track"]
+            config_accessor().search_map_card_allow_zoom = "search_map_card_allow_zoom" in request.form
+            config_accessor().external_map_url = request.form.get("external_map_url", "").strip()
             config_accessor.save()
             flasher.flash_message("Tile source updated.", FlashTypes.SUCCESS)
         return render_template(
@@ -996,6 +1005,8 @@ def make_settings_blueprint(
             map_tile_style_standard=config_accessor().map_tile_style_standard,
             map_tile_style_activity=config_accessor().map_tile_style_activity,
             map_tile_style_track=config_accessor().map_tile_style_track,
+            search_map_card_allow_zoom=config_accessor().search_map_card_allow_zoom,
+            external_map_url=config_accessor().external_map_url,
             test_url=config_accessor().map_tile_url.format(zoom=14, x=8514, y=5504),
         )
 

@@ -1,11 +1,11 @@
 {% extends "settings/base.html.j2" %}
 
 {% block breadcrumbs %}
-<li class="breadcrumb-item active" aria-current="page">{{ _('Map Tile Source') }}</li>
+<li class="breadcrumb-item active" aria-current="page">{{ _('Maps') }}</li>
 {% endblock %}
 
 {% block settings_content %}
-<h1 class="mb-3">{{ _('Tile Source') }}</h1>
+<h1 class="mb-3">{{ _('Maps') }}</h1>
 
 <p>{{ _('You can change the tile source to be whatever you like. Be aware that different sources have different licensing constraints. It is on you to make sure that you are allowed to use the tiles from the source that you enter. See') }} <a
         href="https://wiki.openstreetmap.org/wiki/Raster_tile_providers" target="_blank">{{ _('this list of raster tile providers') }}</a> {{ _('for inspiration.') }}</p>
@@ -58,6 +58,22 @@
             </select>
             <div class="form-text">{{ _('Used for: activity lines, names, and day view — maps where the GPS track is the focus.') }}</div>
         </div>
+    </div>
+
+    <h5 class="mt-4">{{ _('Activity Card Maps') }}</h5>
+    <div class="mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="search_map_card_allow_zoom" name="search_map_card_allow_zoom" {% if search_map_card_allow_zoom %}checked{% endif %}>
+            <label class="form-check-label" for="search_map_card_allow_zoom">{{ _('Allow Zoom and Center on Activity Card Maps') }}</label>
+        </div>
+        <div class="form-text">{{ _('When enabled, the mini maps on activity cards (search map view and Hall of Fame) can be zoomed and panned interactively, and show zoom and fullscreen buttons.') }}</div>
+    </div>
+
+    <h5 class="mt-4">{{ _('External Map') }}</h5>
+    <div class="mb-3">
+        <label for="external_map_url" class="form-label">{{ _('External Map URL') }}</label>
+        <input type="text" class="form-control" id="external_map_url" name="external_map_url" value="{{ external_map_url }}" />
+        <div class="form-text">{{ _('Define an external map to jump to with the current zoom, latitude, and longitude. Use {zoom}, {lat}, {lon} as placeholders. i.e. https://www.openstreetmap.org/#map={zoom}/{lat}/{lon}') }}</div>
     </div>
 
     <button type="submit" class="btn btn-primary">{{ _('Save') }}</button>
