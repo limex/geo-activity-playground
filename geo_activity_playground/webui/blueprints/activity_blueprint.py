@@ -194,6 +194,8 @@ def make_activity_blueprint(
             context["heartrate_time_plot"] = heart_rate_time_plot(time_series)
         if "cadence" in time_series.columns:
             context["cadence_time_plot"] = cadence_time_plot(time_series)
+        if "watts" in time_series.columns:
+            context["watts_time_plot"] = watts_time_plot(time_series)
 
         return render_template("activity/show.html.j2", **context)
 
@@ -581,6 +583,20 @@ def cadence_time_plot(time_series: pd.DataFrame) -> str:
         .encode(
             alt.X("time", title=_("Time")),
             alt.Y("cadence", title=_("Cadence")),
+            alt.Color("segment_id:N", title=_("Segment")),
+        )
+        .interactive(bind_y=False)
+        .to_json(format="vega")
+    )
+
+
+def watts_time_plot(time_series: pd.DataFrame) -> str:
+    return (
+        alt.Chart(time_series, title=_("Power"))
+        .mark_line()
+        .encode(
+            alt.X("time", title=_("Time")),
+            alt.Y("watts", title=_("Power / W")),
             alt.Color("segment_id:N", title=_("Segment")),
         )
         .interactive(bind_y=False)

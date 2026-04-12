@@ -128,6 +128,8 @@ def read_fit_activity(path: pathlib.Path, open) -> tuple[Activity, pd.DataFrame]
                             row["calories"] = values["calories"]
                         if "cadence" in fields:
                             row["cadence"] = values["cadence"]
+                        if "power" in fields:
+                            row["watts"] = values["power"]
                         if "distance" in fields:
                             row["distance"] = values["distance"]
                         if "altitude" in fields:
@@ -283,6 +285,8 @@ def read_tcx_activity(path: pathlib.Path, opener) -> pd.DataFrame:
                 row["heartrate"] = trackpoint.hr_value
             if trackpoint.cadence:
                 row["cadence"] = trackpoint.cadence
+            if trackpoint.tpx_ext and "Watts" in trackpoint.tpx_ext:
+                row["watts"] = trackpoint.tpx_ext["Watts"]
             if trackpoint.distance:
                 row["distance"] = trackpoint.distance
             rows.append(row)

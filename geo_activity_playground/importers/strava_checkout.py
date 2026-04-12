@@ -14,8 +14,12 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+import sqlalchemy
+
 from ..core.config import Config
 from ..core.datamodel import (
+    DB,
+    Activity,
     DEFAULT_UNKNOWN_NAME,
     get_or_make_equipment,
     get_or_make_kind,
@@ -134,6 +138,12 @@ def import_from_strava_checkout(config: Config) -> None:
             continue
 
         if "latitude" not in time_series.columns:
+            continue
+
+        if DB.session.scalar(
+            sqlalchemy.select(Activity).where(Activity.upstream_id == activity_id)
+        ) is not None:
+            logger.info(f"Activity {activity_id} already in database, skipping.")
             continue
 
         activity.upstream_id = activity_id

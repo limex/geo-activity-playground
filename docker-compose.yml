@@ -11,3 +11,8 @@ services:
     environment:
       - GAP_DEV=0
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1g

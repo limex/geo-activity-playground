@@ -12,6 +12,16 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.10)
+
+- **Power data support**: FIT files with a `power` field and TCX files with a `Watts` TPX extension now have their power data imported as `watts`. Power over time is shown as a new chart on the activity page alongside cadence, under a "Cadence & Power" heading.
+- **Strava API: cadence, power, temp streams**: The Strava API importer now also downloads `cadence`, `watts`, and `temp` streams, making those values available for activities imported via the API.
+- **Strava API: token expiry fix**: If a Strava access token expires mid-import, the importer now catches `AccessUnauthorized`, refreshes the token, and retries instead of crashing.
+- **Strava checkout: skip duplicates**: Re-running the Strava export importer no longer re-imports activities already in the database — they are skipped by matching on `upstream_id`.
+- **Tag extraction: autoflush fix**: `get_tags_with_extraction_regex` now runs inside `no_autoflush` to prevent a premature SQLAlchemy flush that could cause errors during activity import.
+
+---
+
 ## Fork Changes (v1.26.9)
 
 - **Search map overhaul**: The aggregate map on the search map view is now 720 px tall (was 360 px). Activity stats (count, distance, elevation, time) are now shown inline in a compact bar instead of four large cards, freeing up vertical space.

@@ -46,7 +46,16 @@
       "Bash(curl -sO https://unpkg.com/leaflet@1/dist/images/marker-icon-2x.png)",
       "Bash(curl -sO https://unpkg.com/leaflet@1/dist/images/marker-shadow.png)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/)",
-      "Bash(uv lock:*)"
+      "Bash(uv lock:*)",
+      "Bash(xargs -I {} basename {})",
+      "Bash(docker-compose exec:*)",
+      "Bash(docker-compose stop:*)",
+      "Bash(/Users/guntherbosch/.local/share/uv/python/cpython-3.12.9-macos-aarch64-none/bin/python3 -)",
+      "Bash(sqlite3 playground/database.sqlite \"SELECT COUNT\\(*\\) FROM activities; SELECT upstream_id, COUNT\\(*\\) c FROM activities GROUP BY upstream_id HAVING c > 1 LIMIT 5;\")",
+      "Bash(sqlite3 playground/database.sqlite)",
+      "Bash(sqlite3 playground/database.sqlite \"SELECT id, upstream_id, time_series_uuid, name FROM activities WHERE upstream_id = '12385294882';\")",
+      "Bash(sqlite3 playground/database.sqlite \"SELECT id, name FROM activities WHERE upstream_id = '12385294882';\")",
+      "Bash(sqlite3 playground/database.sqlite \"SELECT time_series_uuid FROM activities WHERE id = 1463;\")"
     ]
   }
 }

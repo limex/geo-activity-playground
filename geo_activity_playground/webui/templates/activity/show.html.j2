@@ -412,13 +412,20 @@
 </div>
 {% endif %}
 
-{% if cadence_time_plot is defined %}
-<h2>{{ _('Cadence') }}</h2>
+{% if cadence_time_plot is defined or watts_time_plot is defined %}
+<h2>{{ _('Cadence & Power') }}</h2>
 
 <div class="row mb-3">
+    {% if cadence_time_plot is defined %}
     <div class="col-md-4">
         {{ vega_direct(cadence_time_plot) }}
     </div>
+    {% endif %}
+    {% if watts_time_plot is defined %}
+    <div class="col-md-4">
+        {{ vega_direct(watts_time_plot) }}
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 

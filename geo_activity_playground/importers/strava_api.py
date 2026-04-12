@@ -8,7 +8,7 @@ import zoneinfo
 import pandas as pd
 import sqlalchemy
 from stravalib import Client
-from stravalib.exc import Fault, ObjectNotFound, RateLimitExceeded
+from stravalib.exc import AccessUnauthorized, Fault, ObjectNotFound, RateLimitExceeded
 from tqdm import tqdm
 
 from ..core.activities import ActivityRepository
@@ -142,9 +142,18 @@ def import_from_strava_api(
     strava_begin: str | None = None,
     strava_end: str | None = None,
 ) -> None:
-    while try_import_strava(
-        config, repository, tile_visit_accessor, strava_begin, strava_end
-    ):
+    while True:
+        try:
+            if not try_import_strava(
+                config, repository, tile_visit_accessor, strava_begin, strava_end
+            ):
+                break
+        except AccessUnauthorized:
+            logger.warning(
+                "Strava access token expired mid-import, refreshing and retrying."
+            )
+            continue
+
         now = datetime.datetime.now()
         next_quarter = round_to_next_quarter_hour(now)
         seconds_to_wait = (next_quarter - now).total_seconds() + 10
@@ -280,13 +289,13 @@ def try_import_strava(
 
 def download_strava_time_series(activity_id: int, client: Client) -> pd.DataFrame:
     streams = client.get_activity_streams(
-        activity_id, ["time", "latlng", "altitude", "heartrate", "temp"]
+        activity_id, ["time", "latlng", "altitude", "heartrate", "temp", "cadence", "watts"]
     )
     columns = {"time": streams["time"].data}
     if "latlng" in streams:
         columns["latitude"] = [elem[0] for elem in streams["latlng"].data]
         columns["longitude"] = [elem[1] for elem in streams["latlng"].data]
-    for name in ["altitude", "heartrate"]:
+    for name in ["altitude", "heartrate", "temp", "cadence", "watts"]:
         if name in streams:
             columns[name] = streams[name].data
     if "distance" in streams:
