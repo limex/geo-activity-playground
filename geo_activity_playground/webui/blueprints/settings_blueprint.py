@@ -20,7 +20,6 @@ from flask import (
     url_for,
 )
 from flask_babel import gettext as _
-from tqdm import tqdm
 
 from ...core.activities import ActivityRepository
 from ...core.config import Config, ConfigAccessor
@@ -127,10 +126,10 @@ def _reprocess_all_activities(
     use_raw_time_series: bool,
     desc: str,
 ) -> None:
-    for activity in tqdm(
-        DB.session.scalars(sqlalchemy.select(Activity)).all(),
-        desc=desc,
-    ):
+    activities = DB.session.scalars(sqlalchemy.select(Activity)).all()
+    total = len(activities)
+    for index, activity in enumerate(activities, start=1):
+        logger.info(f"{desc}: {index}/{total} — {activity.name}")
         time_series = (
             activity.raw_time_series if use_raw_time_series else activity.time_series
         )

@@ -211,11 +211,9 @@ def enrichment_distance(
         time_series.replace(time_series.loc[~potential_jumps], inplace=True)
         changed = True
 
-    if "segment_id" not in time_series.columns:
-        if config.time_diff_threshold_seconds:
-            time_series["segment_id"] = np.cumsum(jump_indices)
-        else:
-            time_series["segment_id"] = 0
+    new_segment_id = np.cumsum(jump_indices) if config.time_diff_threshold_seconds else 0
+    if "segment_id" not in time_series.columns or (time_series["segment_id"] != new_segment_id).any():
+        time_series["segment_id"] = new_segment_id
         changed = True
 
     new_distance_km = (

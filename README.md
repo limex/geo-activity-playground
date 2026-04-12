@@ -12,6 +12,17 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.11)
+
+- **Search map: auto-zoom to explorer cluster**: When opening the search map without an active filter, the map now automatically fits to the bounding box of your largest explored tile cluster instead of showing the whole world.
+- **Search map: position preserved across filter changes**: The current map position (lat/lon/zoom) is now kept in the URL and restored when submitting the filter form or clicking favorite/last-query links — no more map jumping back to the default view on every search.
+- **Segmentation: confirm before reprocessing**: The "Save" button on Settings → Segmentation now shows a confirmation dialog warning that the change will recompute all activities.
+- **Segmentation: default threshold changed to 0**: `time_diff_threshold_seconds` defaults to `0` (disabled), turning off automatic segment splitting for new installs. Existing configs with an explicit value are unaffected.
+- **Segmentation: segment_id recomputed on change**: `segment_id` is now updated whenever the computed value differs from what's stored, not only when the column is missing — ensuring segment data stays in sync after config changes without a full reprocess.
+- **Reprocessing progress: tqdm replaced with logger**: The bulk-reprocess loop in Settings now logs progress as `name: index/total — activity name` instead of a tqdm progress bar, which is more useful in Docker log output.
+
+---
+
 ## Fork Changes (v1.26.10)
 
 - **Power data support**: FIT files with a `power` field and TCX files with a `Watts` TPX extension now have their power data imported as `watts`. Power over time is shown as a new chart on the activity page alongside cadence, under a "Cadence & Power" heading.

@@ -23,6 +23,6 @@
         <label for="threshold" class="form-label">Threshold / s</label>
         <input type="text" class="form-control" id="threshold" name="threshold" value="{{ threshold }}" />
     </div>
-    <button type="submit" class="btn btn-primary">Save</button>
+    <button type="submit" class="btn btn-primary" onclick="return confirm('{{ _('This will recompute all activities and may take several minutes. Are you sure?') }}')">Save</button>
 </form>
 {% endblock %}

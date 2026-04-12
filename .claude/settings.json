@@ -55,7 +55,21 @@
       "Bash(sqlite3 playground/database.sqlite)",
       "Bash(sqlite3 playground/database.sqlite \"SELECT id, upstream_id, time_series_uuid, name FROM activities WHERE upstream_id = '12385294882';\")",
       "Bash(sqlite3 playground/database.sqlite \"SELECT id, name FROM activities WHERE upstream_id = '12385294882';\")",
-      "Bash(sqlite3 playground/database.sqlite \"SELECT time_series_uuid FROM activities WHERE id = 1463;\")"
+      "Bash(sqlite3 playground/database.sqlite \"SELECT time_series_uuid FROM activities WHERE id = 1463;\")",
+      "Bash(sqlite3 playground/database.sqlite \".recover\")",
+      "Bash(sqlite3 playground/database_recovered.sqlite)",
+      "Skill(home-server-prod)",
+      "Skill(home-server-prod:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/search/map)",
+      "Bash(sqlite3 playground/database.sqlite \"PRAGMA integrity_check;\")",
+      "Bash(sqlite3 playground/database.sqlite \"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;\")",
+      "Bash(sqlite3 playground/database.sqlite \"SELECT name FROM sqlite_master WHERE type='table' OR type='index' ORDER BY rowid;\")",
+      "Bash(sqlite3 playground/database_recovered.sqlite \"PRAGMA integrity_check;\")",
+      "Bash(sqlite3 playground/database_recovered.sqlite \"SELECT COUNT\\(*\\) FROM activities; SELECT COUNT\\(*\\) FROM tile_visits;\")",
+      "Bash(sqlite3 playground/database.sqlite \"SELECT COUNT\\(*\\) FROM activities;\")",
+      "Bash(sqlite3 playground/database.sqlite \"SELECT COUNT\\(*\\) FROM tile_visits;\")",
+      "Bash(docker-compose start:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/heatmap/)"
     ]
   }
 }

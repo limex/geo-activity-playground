@@ -2,9 +2,15 @@
 
 These are the instructions for an LLM coding agent.
 
+## Project-specific Skills (IMPORTANT)
+
+Skills for this project live in `.claude/skills/`. At the start of every session, read all files in that folder and register them as available slash commands.
+
 ## ALWAYS
 
 - **After any file change (Python, Jinja2 templates, JS, CSS) — always rebuild: `docker-compose up --build -d`**. Never use `docker-compose restart` alone; templates and source are baked into the image, not mounted at runtime.
+
+- **CRITICAL — Never run `sqlite3` CLI on `playground/database.sqlite` while the container is running.** Concurrent writes from SQLAlchemy and the CLI will corrupt the database. Always stop the container first (`docker-compose stop`), or use `docker exec geo-activity-playground /app/.venv/bin/python` to run queries inside the container's Python environment instead.
 
 This project is a Flask application that uses SQLAlchemy for persistence.
 

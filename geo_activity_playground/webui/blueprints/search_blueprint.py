@@ -22,14 +22,23 @@ from ...core.meta_search import (
     primitives_to_url_str,
     register_search_query,
 )
+from ...core.tiles import get_tile_upper_left_lat_lon
+from ...explorer.tile_visits import TileVisitAccessor, get_tile_medians
 from ..authenticator import Authenticator
+from .explorer_blueprint import bounding_box_for_biggest_cluster
 
 
-def make_search_blueprint(authenticator: Authenticator, config: Config) -> Blueprint:
+def make_search_blueprint(
+    authenticator: Authenticator,
+    config: Config,
+    tile_visit_accessor: TileVisitAccessor,
+) -> Blueprint:
     blueprint = Blueprint("search", __name__, template_folder="templates")
     per_page = config.search_map_tiles_per_page
     aggregate_map_activity_cap = 100
     aggregate_map_max_lines = 100
+    _explorer_zoom = 14
+    tile_evolution_states = tile_visit_accessor.tile_state["evolution_state"]
 
     @blueprint.route("/")
     def index():
@@ -138,6 +147,15 @@ def make_search_blueprint(authenticator: Authenticator, config: Config) -> Bluep
             else None
         )
 
+        cluster_state = tile_evolution_states[_explorer_zoom]
+        default_bbox = (
+            bounding_box_for_biggest_cluster(
+                cluster_state.clusters.values(), _explorer_zoom
+            )
+            if not initial_view and len(cluster_state.memberships) > 0
+            else None
+        )
+
         return render_template(
             "search/map.html.j2",
             activities_page=activities_page,
@@ -158,6 +176,7 @@ def make_search_blueprint(authenticator: Authenticator, config: Config) -> Bluep
             active_bbox=bbox,
             search_map_card_allow_zoom=config.search_map_card_allow_zoom,
             initial_view=initial_view,
+            default_bbox=default_bbox,
         )
 
     @blueprint.route("/map/aggregate.geojson")

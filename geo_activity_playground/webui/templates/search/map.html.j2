@@ -209,6 +209,57 @@
         swapCards(url);
     });
 
+    function persistMapPosition() {
+        const center = aggregateMap.getCenter();
+        const zoom = aggregateMap.getZoom();
+        const url = new URL(window.location.href);
+        url.searchParams.set('zoom', Math.round(zoom));
+        url.searchParams.set('lat', center.lat.toFixed(5));
+        url.searchParams.set('lon', center.lng.toFixed(5));
+        history.replaceState({}, '', url.toString());
+    }
+
+    // Preserve map position when the filter form is submitted.
+    const _searchForm = document.querySelector('#search_form form');
+    if (_searchForm) {
+        _searchForm.addEventListener('submit', () => {
+            const url = new URL(window.location.href);
+            ['zoom', 'lat', 'lon'].forEach(name => {
+                const val = url.searchParams.get(name);
+                if (val) {
+                    let input = _searchForm.querySelector(`input[name="${name}"][type="hidden"]`);
+                    if (!input) {
+                        input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = name;
+                        _searchForm.appendChild(input);
+                    }
+                    input.value = val;
+                }
+            });
+        });
+    }
+
+    // Preserve map position when clicking favorite/last-query links (plain <a href="?...">
+    // anchors that bypass the form submit event).
+    const _accordion = document.getElementById('search_form_accordion');
+    if (_accordion) {
+        _accordion.addEventListener('click', (e) => {
+            const link = e.target.closest('a[href]');
+            if (!link) return;
+            const href = link.getAttribute('href');
+            if (!href || !href.startsWith('?')) return;
+            const currentUrl = new URL(window.location.href);
+            const targetUrl = new URL(href, window.location.href);
+            ['zoom', 'lat', 'lon'].forEach(name => {
+                const val = currentUrl.searchParams.get(name);
+                if (val) targetUrl.searchParams.set(name, val);
+            });
+            e.preventDefault();
+            window.location.href = targetUrl.toString();
+        });
+    }
+
     fetch(buildAggregateUrl())
         .then(r => r.json())
         .then(geojson => {
@@ -218,6 +269,8 @@
             L.control.locate({ position: 'topleft' }).addTo(aggregateMap);
             {% if initial_view %}
             aggregateMap.setView([{{ initial_view.lat }}, {{ initial_view.lon }}], {{ initial_view.zoom }});
+            {% elif default_bbox %}
+            aggregateMap.fitBounds(L.geoJSON({{ default_bbox | safe }}).getBounds());
             {% endif %}
             {% if external_map_url %}updateExternalMapLink(aggregateMap);{% endif %}
             aggregateMap.on('moveend zoomend', () => {
@@ -225,6 +278,7 @@
                     refreshAggregateLayer();
                 }
                 applyMapViewFilter();
+                persistMapPosition();
                 {% if external_map_url %}updateExternalMapLink(aggregateMap);{% endif %}
             });
         });
