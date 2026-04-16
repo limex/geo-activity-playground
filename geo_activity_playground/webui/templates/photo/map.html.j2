@@ -88,6 +88,33 @@
         attribution: '{{ map_tile_attribution|safe }}'
     }).addTo(map);
 
+    {% if heatmap_layers %}
+    var heatmapOverlays = {
+        {% for label, args in heatmap_layers %}
+        {{ label | replace('kind is ', '') | replace('"', '') | tojson }}: L.tileLayer('/heatmap/tile/{z}/{x}/{y}.png?{{ args }}', { maxZoom: 19, opacity: 0.7 }),
+        {% endfor %}
+    };
+    L.control.layers(null, heatmapOverlays).addTo(map);
+
+    var heatmapStorageKey = 'photo-map-heatmap-layers';
+    try {
+        var savedLayers = JSON.parse(localStorage.getItem(heatmapStorageKey) || '[]');
+        savedLayers.forEach(function (name) {
+            if (heatmapOverlays[name]) heatmapOverlays[name].addTo(map);
+        });
+    } catch (e) {}
+
+    function saveHeatmapLayers() {
+        try {
+            var active = Object.keys(heatmapOverlays).filter(function (name) {
+                return map.hasLayer(heatmapOverlays[name]);
+            });
+            localStorage.setItem(heatmapStorageKey, JSON.stringify(active));
+        } catch (e) {}
+    }
+    map.on('overlayadd overlayremove', saveHeatmapLayers);
+    {% endif %}
+
     fetch("{{ url_for('photo.map_for_all') }}")
         .then(function (response) {
             return response.json();

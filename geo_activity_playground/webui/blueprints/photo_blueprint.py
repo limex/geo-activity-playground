@@ -8,6 +8,7 @@ from flask.typing import ResponseReturnValue
 
 from ...core.config import ConfigAccessor
 from ...core.datamodel import DB, Activity, Photo
+from ...core.meta_search import get_stored_queries
 from ...core.paths import PHOTOS_DIR
 from ...core.photos import PHOTO_UPLOAD_DIR, import_photos_from_folder, process_photo
 from ..authenticator import Authenticator
@@ -39,7 +40,13 @@ def make_photo_blueprint(
             if zoom is not None and lat is not None and lon is not None
             else None
         )
-        return render_template("photo/map.html.j2", initial_view=initial_view)
+        favorites = [q for q in get_stored_queries() if q.is_favorite]
+        heatmap_layers = [(str(q), q.to_url_str()) for q in favorites]
+        return render_template(
+            "photo/map.html.j2",
+            initial_view=initial_view,
+            heatmap_layers=heatmap_layers,
+        )
 
     @blueprint.route("/map-for-all/photos.geojson")
     def map_for_all() -> Response:

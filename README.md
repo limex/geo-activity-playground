@@ -12,6 +12,12 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.13)
+
+- **Photo map: heatmap overlay per favorite query**: Each saved favorite search query now appears as a toggleable heatmap overlay in the photo map's layer control. Activity kind labels are shown without the "kind is" prefix and without quotes (e.g. "Ride" instead of `kind is "Ride"`). Active layers are persisted in `localStorage` and restored on next visit.
+
+---
+
 ## Fork Changes (v1.26.12)
 
 - **Photo map: maximize button**: A new expand icon in the map's top-left control bar (below the locate button) hides the navbar, page title, and footer and stretches the map to fill the full browser viewport. Clicking the compress icon restores the normal layout.

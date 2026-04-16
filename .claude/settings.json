@@ -69,7 +69,15 @@
       "Bash(sqlite3 playground/database.sqlite \"SELECT COUNT\\(*\\) FROM activities;\")",
       "Bash(sqlite3 playground/database.sqlite \"SELECT COUNT\\(*\\) FROM tile_visits;\")",
       "Bash(docker-compose start:*)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/heatmap/)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/heatmap/)",
+      "Bash(sqlite3 --version)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(sqlite3 playground/database.sqlite \".recover\" wc -l /tmp/db_recover.sql grep -n -i \"tile_visits\" /tmp/db_recover.sql)",
+      "Read(//private/tmp/**)",
+      "Bash(sqlite3 playground/database_recovered.sqlite \"PRAGMA integrity_check\")",
+      "Bash(sqlite3 playground/database_recovered.sqlite \"SELECT COUNT\\(*\\) FROM activities; SELECT COUNT\\(*\\) FROM photos; SELECT name FROM sqlite_master WHERE name='tile_visits';\")",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/activity/353)"
     ]
   }
 }
