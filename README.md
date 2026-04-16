@@ -12,6 +12,13 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.12)
+
+- **Photo map: maximize button**: A new expand icon in the map's top-left control bar (below the locate button) hides the navbar, page title, and footer and stretches the map to fill the full browser viewport. Clicking the compress icon restores the normal layout.
+- **Photo map: External Map moved into map**: The "External Map" link is now a map-icon button inside the Leaflet control bar (below the maximize button), visible at all times including when maximized. The button still updates its URL on every pan/zoom.
+
+---
+
 ## Fork Changes (v1.26.11)
 
 - **Search map: auto-zoom to explorer cluster**: When opening the search map without an active filter, the map now automatically fits to the bounding box of your largest explored tile cluster instead of showing the whole world.

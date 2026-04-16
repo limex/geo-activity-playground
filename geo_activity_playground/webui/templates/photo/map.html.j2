@@ -3,24 +3,68 @@
 {% block container %}
 <h1>{{ _('Photo Map') }}</h1>
 
-{% if external_map_url %}
-<div class="d-flex justify-content-end mb-2">
-    <a id="external-map-link" href="#" target="_blank" class="btn btn-sm btn-outline-secondary">{{ _('External Map') }}</a>
-</div>
-{% endif %}
-
 <div id="photo-map" style="height: 800px;" class="mb-3"></div>
 <script>
     var map = L.map('photo-map', {
         fullscreenControl: true
     });
     L.control.locate({ position: 'topleft' }).addTo(map);
-    L.tileLayer('/tile/{{ map_tile_style_standard }}/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '{{ map_tile_attribution|safe }}'
-    }).addTo(map);
+
+    var iconExpand = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344 0a.5.5 0 0 1 .707 0l4.096 4.096V11.5a.5.5 0 1 1 1 0v3.975a.5.5 0 0 1-.5.5H11.5a.5.5 0 0 1 0-1h2.768l-4.096-4.096a.5.5 0 0 1 0-.707zm0-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707zm-4.344 0a.5.5 0 0 1-.707 0L1.025 1.732V4.5a.5.5 0 0 1-1 0V.525a.5.5 0 0 1 .5-.5H4.5a.5.5 0 0 1 0 1H1.732l4.096 4.096a.5.5 0 0 1 0 .707z"/></svg>';
+    var iconCompress = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4z"/></svg>';
+    var iconMap = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M15.817.113A.5.5 0 0 1 16 .5v14a.5.5 0 0 1-.402.49l-5 1a.502.502 0 0 1-.196 0L5.5 15.01l-4.902.98A.5.5 0 0 1 0 15.5v-14a.5.5 0 0 1 .402-.49l5-1a.5.5 0 0 1 .196 0L10.5.99l4.902-.98a.5.5 0 0 1 .415.103zM10 1.91l-4-.8v12.98l4 .8V1.91zm1 12.98 4-.8V1.11l-4 .8v12.98zm-6-.8V1.11l-4 .8v12.98l4-.8z"/></svg>';
+
+    // Maximize control
+    var MaximizeControl = L.Control.extend({
+        options: { position: 'topleft' },
+        onAdd: function () {
+            var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            var btn = L.DomUtil.create('a', '', container);
+            btn.href = '#';
+            btn.title = '{{ _('Maximize') }}';
+            btn.style.display = 'flex';
+            btn.style.alignItems = 'center';
+            btn.style.justifyContent = 'center';
+            btn.style.width = '26px';
+            btn.style.height = '26px';
+            btn.innerHTML = iconExpand;
+            L.DomEvent.on(btn, 'click', function (e) {
+                L.DomEvent.preventDefault(e);
+                var maximized = document.body.classList.toggle('map-maximized');
+                btn.innerHTML = maximized ? iconCompress : iconExpand;
+                btn.title = maximized ? '{{ _('Minimize') }}' : '{{ _('Maximize') }}';
+                map.invalidateSize();
+            });
+            return container;
+        }
+    });
+    new MaximizeControl().addTo(map);
 
     {% if external_map_url %}
+    // External map control
+    var ExternalMapControl = L.Control.extend({
+        options: { position: 'topleft' },
+        onAdd: function () {
+            var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            var link = L.DomUtil.create('a', '', container);
+            link.id = 'external-map-link';
+            link.href = '#';
+            link.target = '_blank';
+            link.title = '{{ _('External Map') }}';
+            link.style.display = 'flex';
+            link.style.alignItems = 'center';
+            link.style.justifyContent = 'center';
+            link.style.width = '26px';
+            link.style.height = '26px';
+            link.innerHTML = iconMap;
+            L.DomEvent.on(link, 'click', function (e) {
+                L.DomEvent.stopPropagation(e);
+            });
+            return container;
+        }
+    });
+    new ExternalMapControl().addTo(map);
+
     const externalMapBaseUrl = {{ external_map_url | tojson }};
 
     function updateExternalMapLink() {
@@ -38,6 +82,11 @@
 
     map.on('moveend zoomend', updateExternalMapLink);
     {% endif %}
+
+    L.tileLayer('/tile/{{ map_tile_style_standard }}/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '{{ map_tile_attribution|safe }}'
+    }).addTo(map);
 
     fetch("{{ url_for('photo.map_for_all') }}")
         .then(function (response) {

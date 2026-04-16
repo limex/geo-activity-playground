@@ -6,3 +6,16 @@
 .navbar .dropdown-menu {
     z-index: 1031;
 }
+
+body.map-maximized .container {
+    max-width: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+body.map-maximized nav.navbar { display: none; }
+body.map-maximized .row.border-top { display: none; }
+body.map-maximized h1 { display: none; }
+body.map-maximized #photo-map { height: 100vh !important; }
+body.map-maximized { overflow: hidden; }
