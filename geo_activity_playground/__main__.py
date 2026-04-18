@@ -6,8 +6,6 @@ import pathlib
 import coloredlogs
 
 from .core.photos import main_inspect_photo
-from .explorer.video import explorer_video_main
-from .heatmap_video import main_heatmap_video
 from .importers.strava_checkout import convert_strava_checkout
 from .webui.app import web_ui_main
 
@@ -29,11 +27,6 @@ def main() -> None:
     subparsers = parser.add_subparsers(
         description="The tools are organized in subcommands.", metavar="Command"
     )
-
-    subparser = subparsers.add_parser(
-        "explorer-video", help="Generate video with explorer timeline."
-    )
-    subparser.set_defaults(func=lambda options: explorer_video_main())
 
     subparser = subparsers.add_parser(
         "convert-strava-checkout",
@@ -72,17 +65,6 @@ def main() -> None:
     subparser.add_argument(
         "--strava-end", help="End date to limit Strava sync, format YYYY-MM-DD"
     )
-
-    subparser = subparsers.add_parser(
-        "heatmap-video", help="Create a video with the evolution of the heatmap"
-    )
-    subparser.add_argument("latitude", type=float)
-    subparser.add_argument("longitude", type=float)
-    subparser.add_argument("zoom", type=int)
-    subparser.add_argument("--decay", type=float, default=0.05)
-    subparser.add_argument("--video-width", type=int, default=1920)
-    subparser.add_argument("--video-height", type=int, default=1080)
-    subparser.set_defaults(func=main_heatmap_video)
 
     subparser = subparsers.add_parser(
         "inspect-photo",

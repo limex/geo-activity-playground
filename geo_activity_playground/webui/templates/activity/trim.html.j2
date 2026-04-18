@@ -14,7 +14,7 @@
     import { initActivityTrimMap } from '/static/activity-trim.js';
     initActivityTrimMap({
         attribution: '{{ map_tile_attribution|safe }}',
-        tileStyle: '{{ map_tile_style_activity }}',
+        baseTileUrl: '{{ map_tile_url|safe }}',
         geojson: {{ color_line_geojson | safe }}
     });
 </script>

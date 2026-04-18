@@ -21,12 +21,7 @@ from ...core.meta_search import (
     primitives_to_url_str,
     register_search_query,
 )
-from ...core.raster_map import (
-    OSM_TILE_SIZE,
-    GeoBounds,
-    PixelBounds,
-    get_sensible_zoom_level,
-)
+from ...core.raster_map import OSM_TILE_SIZE
 from ...core.tiles import get_tile_upper_left_lat_lon
 from ...explorer.tile_visits import TileVisitAccessor, get_tile_medians
 from ..authenticator import Authenticator
@@ -103,43 +98,6 @@ def make_heatmap_blueprint(
         if etag:
             headers["ETag"] = etag
         return Response(bytes(f.getbuffer()), mimetype="image/png", headers=headers)
-
-    @blueprint.route(
-        "/download/<float:north>/<float:east>/<float:south>/<float:west>/heatmap.png"
-    )
-    def download(north: float, east: float, south: float, west: float):
-        primitives = parse_search_params(request.args)
-        geo_bounds = GeoBounds(south, west, north, east)
-        tile_bounds = get_sensible_zoom_level(geo_bounds, (4000, 4000))
-        pixel_bounds = PixelBounds.from_tile_bounds(tile_bounds)
-
-        background = np.zeros((*pixel_bounds.shape, 3))
-        for x in range(tile_bounds.x1, tile_bounds.x2):
-            for y in range(tile_bounds.y1, tile_bounds.y2):
-                i = y - tile_bounds.y1
-                j = x - tile_bounds.x1
-
-                background[
-                    i * OSM_TILE_SIZE : (i + 1) * OSM_TILE_SIZE,
-                    j * OSM_TILE_SIZE : (j + 1) * OSM_TILE_SIZE,
-                    :,
-                ] = _render_tile_image(
-                    x,
-                    y,
-                    tile_bounds.zoom,
-                    primitives,
-                    config,
-                    repository,
-                    activities_per_tile,
-                )
-
-        f = io.BytesIO()
-        pl.imsave(f, background, format="png")
-        return Response(
-            bytes(f.getbuffer()),
-            mimetype="image/png",
-            headers={"Content-disposition": 'attachment; filename="heatmap.png"'},
-        )
 
     return blueprint
 
@@ -265,16 +223,3 @@ def _counts_to_image(counts: np.ndarray, config: Config) -> np.ndarray:
     data_color[tile_counts > 0, 3] = 0.8
     data_color[tile_counts == 0, 3] = 0.0
     return data_color
-
-
-def _render_tile_image(
-    x: int,
-    y: int,
-    z: int,
-    primitives: dict,
-    config: Config,
-    repository: ActivityRepository,
-    activities_per_tile: dict[int, dict[tuple[int, int], set[int]]],
-) -> np.ndarray:
-    counts, _ = _get_counts(x, y, z, primitives, config, repository, activities_per_tile)
-    return _counts_to_image(counts, config)

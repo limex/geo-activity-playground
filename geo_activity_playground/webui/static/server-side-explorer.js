@@ -20,6 +20,7 @@ export function initExplorerMap(config) {
         centerLongitude,
         zoom,
         attribution,
+        baseTileUrl,
         bbox = null,
         squarePlanner = null,
         clusterHistory = null
@@ -34,6 +35,7 @@ export function initExplorerMap(config) {
     add_layers_to_map(map, {
         zoom,
         attribution,
+        baseTileUrl,
         squarePlanner,
         historyEventIndex: clusterHistory ? clusterHistory.initialEventIndex : null
     });
