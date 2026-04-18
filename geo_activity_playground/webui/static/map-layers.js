@@ -1,35 +1,17 @@
-/**
- * Adds base and overlay tile layers to a Leaflet map with layer control.
- * 
- * @param {L.Map} map - The Leaflet map instance
- * @param {Object} config - Configuration object
- * @param {number} config.zoom - Explorer tile zoom level
- * @param {string} config.attribution - Map tile attribution text
- * @param {string} [config.baseLayer='Grayscale'] - Default base layer name
- * @param {string} [config.overlay='Colorful Cluster'] - Default overlay name
- * @param {Object} [config.squarePlanner] - Square planner config (optional)
- * @param {number} config.squarePlanner.x - Square X coordinate
- * @param {number} config.squarePlanner.y - Square Y coordinate
- * @param {number} config.squarePlanner.size - Square size
- * @param {string} [config.heatmapExtraArgs] - Extra URL args for heatmap tiles
- * @param {number} [config.historyEventIndex] - Optional cluster-history cutoff index
- */
 export function add_layers_to_map(map, config) {
     const {
         zoom,
         attribution,
-        baseLayer = 'Grayscale',
+        baseTileUrl,
         overlay = 'Colorful Cluster',
         squarePlanner = null,
         heatmapExtraArgs = null,
         historyEventIndex = null
     } = config;
 
-    // Get map container ID for localStorage key
     const mapId = map.getContainer().id;
     const storageKey = `map-layers-${mapId}`;
 
-    // Load saved preferences if available
     let saved = {};
     try {
         saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
@@ -37,24 +19,9 @@ export function add_layers_to_map(map, config) {
         console.warn('Failed to load saved map layers:', e);
     }
 
+    const baseLayerName = "Map";
     const base_maps = {
-        "Grayscale": L.tileLayer("/tile/grayscale/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution
-        }),
-        "Pastel": L.tileLayer("/tile/pastel/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution
-        }),
-        "Color": L.tileLayer("/tile/color/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution
-        }),
-        "Inverse Grayscale": L.tileLayer("/tile/inverse_grayscale/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution
-        }),
-        "Blank": L.tileLayer("/tile/blank/{z}/{x}/{y}.png", {
+        [baseLayerName]: L.tileLayer(baseTileUrl, {
             maxZoom: 19,
             attribution
         }),
@@ -145,8 +112,7 @@ export function add_layers_to_map(map, config) {
         selectedOverlay = "Square Planner";
     }
 
-    // Use saved preferences if valid, otherwise fall back to defaults
-    const selectedBase = (saved.base && base_maps[saved.base]) ? saved.base : baseLayer;
+    const selectedBase = baseLayerName;
 
     // In square planner mode the active overlay must be deterministic and tied to URL
     // parameters; saved overlays can otherwise hide the planner layer.

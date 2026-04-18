@@ -6,7 +6,6 @@ import logging
 import os
 import pathlib
 import secrets
-import shutil
 import sys
 import threading
 import urllib.parse
@@ -41,14 +40,6 @@ from ..core.heatmap_cache import (
     import_legacy_heatmap_cache_from_filesystem,
 )
 from ..core.paths import TIME_SERIES_DIR
-from ..core.raster_map import (
-    BlankImageTransform,
-    GrayscaleImageTransform,
-    IdentityImageTransform,
-    InverseGrayscaleImageTransform,
-    PastelImageTransform,
-    TileGetter,
-)
 from ..explorer.tile_visits import TileVisitAccessor
 from .authenticator import Authenticator, PUBLIC_ENDPOINTS
 from .blueprints.activity_blueprint import make_activity_blueprint
@@ -70,7 +61,6 @@ from .blueprints.segments_blueprint import make_segments_blueprint
 from .blueprints.settings_blueprint import make_settings_blueprint
 from .blueprints.square_planner_blueprint import make_square_planner_blueprint
 from .blueprints.summary_blueprint import make_summary_blueprint
-from .blueprints.tile_blueprint import make_tile_blueprint
 from .blueprints.time_zone_fixer_blueprint import make_time_zone_fixer_blueprint
 from .blueprints.upload_blueprint import make_upload_blueprint, scan_for_activities
 from .flasher import FlaskFlasher
@@ -244,14 +234,6 @@ def create_app(
             flash("You need to be logged in to view that page.", category="warning")
             return redirect(url_for("auth.index", redirect=request.url))
 
-    tile_getter = TileGetter(config.map_tile_url)
-    image_transforms = {
-        "color": IdentityImageTransform(),
-        "grayscale": GrayscaleImageTransform(),
-        "pastel": PastelImageTransform(),
-        "inverse_grayscale": InverseGrayscaleImageTransform(),
-        "blank": BlankImageTransform(),
-    }
     flasher = FlaskFlasher()
     heart_rate_zone_computer = HeartRateZoneComputer(config)
 
@@ -308,8 +290,6 @@ def create_app(
             authenticator,
             tile_visit_accessor,
             config_accessor,
-            tile_getter,
-            image_transforms,
             config,
         ),
         "/export": make_export_blueprint(authenticator),
@@ -330,7 +310,6 @@ def create_app(
         "/square-planner": make_square_planner_blueprint(tile_visit_accessor),
         "/search": make_search_blueprint(authenticator, config, tile_visit_accessor),
         "/summary": make_summary_blueprint(repository, config, authenticator),
-        "/tile": make_tile_blueprint(image_transforms, tile_getter),
         "/time-zone-fixer": make_time_zone_fixer_blueprint(
             authenticator, config, tile_visit_accessor
         ),
@@ -349,9 +328,7 @@ def create_app(
             "version": _try_get_version(),
             "num_activities": len(repository),
             "map_tile_attribution": config_accessor().map_tile_attribution,
-            "map_tile_style_standard": config_accessor().map_tile_style_standard,
-            "map_tile_style_activity": config_accessor().map_tile_style_activity,
-            "map_tile_style_track": config_accessor().map_tile_style_track,
+            "map_tile_url": _map_tile_url_for_leaflet(config_accessor().map_tile_url),
             "external_map_url": config_accessor().external_map_url,
             "request_url": urllib.parse.quote_plus(request.url),
         }
@@ -442,15 +419,6 @@ def web_ui_main(
         thread.start()
         thread.join()
 
-    # Migrate tile cache directory structure
-    base_dir = pathlib.Path("Open Street Map Tiles")
-    dir_for_source = base_dir / urllib.parse.quote_plus(config_accessor().map_tile_url)
-    if base_dir.exists() and not dir_for_source.exists():
-        subdirs = base_dir.glob("*")
-        dir_for_source.mkdir()
-        for subdir in subdirs:
-            shutil.move(subdir, dir_for_source)
-
     # Register cleanup handler to properly close database connection on shutdown
     def cleanup():
         with app.app_context():
@@ -473,3 +441,7 @@ def _try_get_version():
         return importlib.metadata.version("geo-activity-playground")
     except importlib.metadata.PackageNotFoundError:
         pass
+
+
+def _map_tile_url_for_leaflet(url: str) -> str:
+    return url.replace("{zoom}", "{z}")

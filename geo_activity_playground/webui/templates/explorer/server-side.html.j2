@@ -59,6 +59,7 @@
                 centerLongitude: {{ center.longitude }},
                 zoom: {{ zoom }},
                 attribution: '{{ map_tile_attribution|safe }}',
+                baseTileUrl: '{{ map_tile_url|safe }}',
                 bbox: {{ center.bbox | safe }},
                 clusterHistory: {
                     maxEventIndex: {{ latest_history_event_index }},
@@ -130,11 +131,6 @@
 <p>{{ _('You can use the overlay tiles with other services like') }} <a href="https://bikerouter.de/" target="_blank">Bike
         Router</a>. {{ _('See') }} <a href="https://martin-ueding.github.io/geo-activity-playground/using-maps-as-overlays/"
         target="_blank">{{ _('the documentation for this feature') }}</a>. {{ _('For your server, use the following URLs:') }}</p>
-
-<code><pre class="tile-urls">/tile/grayscale/{z}/{x}/{y}.png
-/tile/pastel/{z}/{x}/{y}.png
-/tile/color/{z}/{x}/{y}.png
-/tile/inverse_grayscale/{z}/{x}/{y}.png</pre></code>
 
 <p>{{ _('For the explorer tiles, you can use these:') }}</p>
 

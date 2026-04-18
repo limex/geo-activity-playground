@@ -30,7 +30,7 @@ from flask_babel import gettext as _
 from ...core.config import Config, ConfigAccessor
 from ...core.coordinates import Bounds
 from ...core.datamodel import DB, Activity, ExplorerTileBookmark, TileVisit
-from ...core.raster_map import OSM_TILE_SIZE, ImageTransform, TileGetter
+from ...core.raster_map import OSM_TILE_SIZE
 from ...core.tiles import compute_tile, get_tile_upper_left_lat_lon
 from ...explorer.grid_file import (
     get_border_tiles,
@@ -297,8 +297,6 @@ def make_explorer_blueprint(
     authenticator: Authenticator,
     tile_visit_accessor: TileVisitAccessor,
     config_accessor: ConfigAccessor,
-    tile_getter: TileGetter,
-    image_transforms: dict[str, ImageTransform],
     config: Config,
 ) -> Blueprint:
     blueprint = Blueprint("explorer", __name__, template_folder="templates")
@@ -462,8 +460,6 @@ def make_explorer_blueprint(
             )
             historical_state = get_cluster_state_at_cutoff(zoom, history_event_index)
 
-        # map_tile = np.array(tile_getter.get_tile(z, x, y)) / 255
-        # grayscale = image_transforms["grayscale"].transform_image(map_tile)
         grayscale = np.zeros((OSM_TILE_SIZE, OSM_TILE_SIZE, 4), dtype=np.float32)
         square_line_width = 3
         square_color = np.array([[[228, 26, 28, 255]]]) / 256

@@ -105,6 +105,7 @@
                 centerLongitude: {{ center.longitude }},
                 zoom: {{ zoom }},
                 attribution: '{{ map_tile_attribution|safe }}',
+                baseTileUrl: '{{ map_tile_url|safe }}',
                 bbox: {{ square_geojson | safe }},
                 overlay: "Square Planner",
                 squarePlanner: {

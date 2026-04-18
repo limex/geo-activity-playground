@@ -101,7 +101,7 @@
             var map = L.map('activity-show-map', {
                 fullscreenControl: true
             });
-            L.tileLayer('/tile/{{ map_tile_style_activity }}/{z}/{x}/{y}.png', {
+            L.tileLayer('{{ map_tile_url|safe }}', {
                 maxZoom: 19,
                 attribution: '{{ map_tile_attribution|safe }}'
             }).addTo(map);
@@ -430,12 +430,6 @@
 {% endif %}
 
 
-<h2>{{ _('Share picture') }}</h2>
-
-<p><img class="img-fluid" src="{{ url_for('.sharepic', id=activity.id) }}" /></p>
-
-<p>{{ _('Not happy with the displayed data?') }} <a href="{{ url_for('settings.sharepic') }}">{{ _('Change share picture settings') }}</a>.</p>
-
 {% if new_tiles_geojson %}
 <h2>{{ _('New explorer tiles') }}</h2>
 <p>{{ _('With this activity you have explored new explorer tiles. The following maps show the new tiles on the respective zoom levels.') }}</p>
@@ -467,11 +461,6 @@
 
         const map = L.map(container, { fullscreenControl: true });
 
-        L.tileLayer('/tile/{{ map_tile_style_standard }}/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution
-        }).addTo(map);
-
         // Add new tiles layer (orange outline)
         const tilesLayer = L.geoJSON(tilesGeojson, {
             style: { color: "#ff7700", fillOpacity: 0.0 }
@@ -485,8 +474,8 @@
         // Add explorer overlay
         add_layers_to_map(map, {
             zoom,
+            baseTileUrl: '{{ map_tile_url|safe }}',
             attribution,
-            baseLayer: 'Color',
             overlay: 'Visited'
         });
 

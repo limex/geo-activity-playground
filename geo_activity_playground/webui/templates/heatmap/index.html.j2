@@ -10,7 +10,6 @@
 <div class="row mb-3">
     <div class="col">
         <div id="heatmap-map" style="height: 800px;"></div>
-        <p><a href="#" id="heatmap-download">{{ _('Download heatmap in visible area') }}</a></p>
 
         <script type="module">
             import { add_layers_to_map } from '/static/map-layers.js';
@@ -23,8 +22,8 @@
 
             add_layers_to_map(map, {
                 zoom: 14,
+                baseTileUrl: '{{ map_tile_url|safe }}',
                 attribution: '{{ map_tile_attribution|safe }}',
-                baseLayer: 'Inverse Grayscale',
                 overlay: 'Heatmap',
                 heatmapExtraArgs: '{{ extra_args|safe }}' || null
             });
@@ -33,13 +32,6 @@
             if (bbox) {
                 map.fitBounds(L.geoJSON(bbox).getBounds());
             }
-
-            document.getElementById('heatmap-download').addEventListener('click', (e) => {
-                e.preventDefault();
-                const bounds = map.getBounds();
-                window.location.href =
-                    `/heatmap/download/${bounds.getNorth()}/${bounds.getEast()}/${bounds.getSouth()}/${bounds.getWest()}/heatmap.png?{{ extra_args|safe }}`;
-            });
         </script>
     </div>
 </div>

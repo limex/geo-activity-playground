@@ -83,7 +83,7 @@
     map.on('moveend zoomend', updateExternalMapLink);
     {% endif %}
 
-    L.tileLayer('/tile/{{ map_tile_style_standard }}/{z}/{x}/{y}.png', {
+    L.tileLayer('{{ map_tile_url|safe }}', {
         maxZoom: 19,
         attribution: '{{ map_tile_attribution|safe }}'
     }).addTo(map);

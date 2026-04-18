@@ -6,7 +6,6 @@ PUBLIC_ENDPOINTS = frozenset({
     "static",         # Flask built-in static file serving
     "auth.index",     # login page (GET + POST)
     "auth.logout",
-    "tile.tile",      # background OSM tiles  /tile/<scheme>/<z>/<x>/<y>.png
     "heatmap.tile",   # heatmap tiles         /heatmap/tile/<z>/<x>/<y>.png
     "explorer.tile",  # explorer tiles        /explorer/<zoom>/tile/<z>/<x>/<y>.png
 })

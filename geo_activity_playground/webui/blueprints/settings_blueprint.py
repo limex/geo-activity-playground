@@ -98,16 +98,8 @@ MATPLOTLIB_COLOR_SCHEMES_CONTINUOUS = [
 ]
 
 
-SHAREPIC_FIELDS = {
-    "calories": "Calories",
-    "distance_km": "Distance",
-    "elapsed_time": "Elapsed time",
-    "equipment": "Equipment",
-    "kind": "Kind",
-    "name": "Name",
-    "start": "Date",
-    "Steps": "Steps",
-}
+def _test_tile_url(url: str) -> str:
+    return url.replace("{zoom}", "{z}").format(z=14, x=8514, y=5504)
 
 
 def int_or_none(s: str) -> int | None:
@@ -804,27 +796,6 @@ def make_settings_blueprint(
             threshold=config_accessor().time_diff_threshold_seconds,
         )
 
-    @blueprint.route("/sharepic", methods=["GET", "POST"])
-    def sharepic():
-        if request.method == "POST":
-            names = request.form.getlist("name")
-            config_accessor().sharepic_suppressed_fields = list(
-                set(SHAREPIC_FIELDS) - set(names)
-            )
-            config_accessor.save()
-            flash("Updated sharepic preferences.", category="success")
-        return render_template(
-            "settings/sharepic.html.j2",
-            names=[
-                (
-                    name,
-                    label,
-                    name not in config_accessor().sharepic_suppressed_fields,
-                )
-                for name, label in SHAREPIC_FIELDS.items()
-            ],
-        )
-
     @blueprint.route("/strava", methods=["GET", "POST"])
     def strava():
         if request.method == "POST":
@@ -990,9 +961,6 @@ def make_settings_blueprint(
         if request.method == "POST":
             config_accessor().map_tile_url = request.form["map_tile_url"]
             config_accessor().map_tile_attribution = request.form["map_tile_attribution"]
-            config_accessor().map_tile_style_standard = request.form["map_tile_style_standard"]
-            config_accessor().map_tile_style_activity = request.form["map_tile_style_activity"]
-            config_accessor().map_tile_style_track = request.form["map_tile_style_track"]
             config_accessor().search_map_card_allow_zoom = "search_map_card_allow_zoom" in request.form
             config_accessor().external_map_url = request.form.get("external_map_url", "").strip()
             config_accessor.save()
@@ -1001,12 +969,9 @@ def make_settings_blueprint(
             "settings/tile-source.html.j2",
             map_tile_url=config_accessor().map_tile_url,
             map_tile_attribution=config_accessor().map_tile_attribution,
-            map_tile_style_standard=config_accessor().map_tile_style_standard,
-            map_tile_style_activity=config_accessor().map_tile_style_activity,
-            map_tile_style_track=config_accessor().map_tile_style_track,
             search_map_card_allow_zoom=config_accessor().search_map_card_allow_zoom,
             external_map_url=config_accessor().external_map_url,
-            test_url=config_accessor().map_tile_url.format(zoom=14, x=8514, y=5504),
+            test_url=_test_tile_url(config_accessor().map_tile_url),
         )
 
     @blueprint.route("/misc", methods=["GET", "POST"])

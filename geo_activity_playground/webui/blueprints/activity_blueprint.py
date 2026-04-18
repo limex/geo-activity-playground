@@ -1,8 +1,6 @@
 import datetime
-import io
 import logging
 import pathlib
-import re
 
 import altair as alt
 import geojson
@@ -21,7 +19,6 @@ from flask import (
 )
 from flask.typing import ResponseReturnValue
 from flask_babel import gettext as _
-from PIL import Image, ImageDraw
 
 from ...core.activities import (
     ActivityRepository,
@@ -43,13 +40,6 @@ from ...core.datamodel import (
 )
 from ...core.enrichment import update_and_commit
 from ...core.heart_rate import HeartRateZoneComputer
-from ...core.privacy_zones import PrivacyZone
-from ...core.raster_map import (
-    OSM_MAX_ZOOM,
-    OSM_TILE_SIZE,
-    map_image_from_tile_bounds,
-    tile_bounds_around_center,
-)
 from ...explorer.grid_file import make_grid_file_geojson, make_grid_points
 from ...explorer.tile_visits import TileVisitAccessor, remove_activity_from_tile_state
 from ..authenticator import Authenticator
@@ -208,22 +198,6 @@ def make_activity_blueprint(
             mimetype="application/json",
         )
 
-    @blueprint.route("/<int:id>/sharepic.png")
-    def sharepic(id: int) -> ResponseReturnValue:
-        activity = repository.get_activity_by_id(id)
-        time_series = repository.get_time_series(id)
-        for coordinates in config.privacy_zones.values():
-            privacy_zone = PrivacyZone(coordinates)
-            time_series = privacy_zone.filter_time_series(time_series)
-        if len(time_series) == 0:
-            time_series = repository.get_time_series(id)
-        return Response(
-            make_sharepic(
-                activity, time_series, config.sharepic_suppressed_fields, config
-            ),
-            mimetype="image/png",
-        )
-
     @blueprint.route("/day/<int:year>/<int:month>/<int:day>")
     def day(year: int, month: int, day: int) -> ResponseReturnValue:
         meta = repository.meta
@@ -273,23 +247,6 @@ def make_activity_blueprint(
         return render_template(
             "activity/day.html.j2",
             **context,
-        )
-
-    @blueprint.route("/day-sharepic/<int:year>/<int:month>/<int:day>/sharepic.png")
-    def day_sharepic(year: int, month: int, day: int) -> ResponseReturnValue:
-        meta = repository.meta
-        selection = meta["start_local"].dt.date == datetime.date(year, month, day)
-        activities_that_day = meta.loc[selection]
-
-        time_series = [
-            repository.get_time_series(activity_id)
-            for activity_id in activities_that_day["id"]
-        ]
-        assert len(activities_that_day) > 0
-        assert len(time_series) > 0
-        return Response(
-            make_day_sharepic(activities_that_day, time_series, config),
-            mimetype="image/png",
         )
 
     @blueprint.route("/name/<name>")
@@ -662,168 +619,6 @@ def name_minutes_plot(meta: pd.DataFrame) -> str:
         )
         .to_json(format="vega")
     )
-
-
-def make_sharepic_base(time_series_list: list[pd.DataFrame], config: Config):
-    all_time_series = pd.concat(time_series_list)
-    finite_mask = np.isfinite(all_time_series["x"]) & np.isfinite(all_time_series["y"])
-    all_time_series = all_time_series.loc[finite_mask]
-
-    target_width = 600
-    target_height = 600
-    footer_height = 100
-    target_map_height = target_height - footer_height
-
-    if len(all_time_series) == 0:
-        return Image.new("RGB", (target_width, target_height), "black")
-
-    tile_x = all_time_series["x"]
-    tile_y = all_time_series["y"]
-    tile_width = tile_x.max() - tile_x.min()
-    tile_height = tile_y.max() - tile_y.min()
-
-    zoom_candidates = [OSM_MAX_ZOOM]
-    if tile_width > 0:
-        zoom_candidates.append(np.log2(target_width / tile_width / OSM_TILE_SIZE))
-    if tile_height > 0:
-        zoom_candidates.append(np.log2(target_map_height / tile_height / OSM_TILE_SIZE))
-    zoom_float = min(zoom_candidates)
-    zoom = int(np.clip(np.floor(zoom_float), 0, OSM_MAX_ZOOM))
-
-    tile_xz = tile_x * 2**zoom
-    tile_yz = tile_y * 2**zoom
-
-    tile_xz_center = (
-        (tile_xz.max() + tile_xz.min()) / 2,
-        (tile_yz.max() + tile_yz.min()) / 2,
-    )
-
-    tile_bounds = tile_bounds_around_center(
-        tile_xz_center, (target_width, target_height - footer_height), zoom
-    )
-    tile_bounds.y2 += footer_height / OSM_TILE_SIZE
-    background = map_image_from_tile_bounds(tile_bounds, config)
-
-    img = Image.fromarray((background * 255).astype("uint8"), "RGB")
-    draw = ImageDraw.Draw(img, mode="RGBA")
-
-    for time_series in time_series_list:
-        time_series = time_series.loc[
-            np.isfinite(time_series["x"]) & np.isfinite(time_series["y"])
-        ]
-        if len(time_series) == 0:
-            continue
-        for _index, group in time_series.groupby("segment_id"):
-            tile_xz = group["x"] * 2**zoom
-            tile_yz = group["y"] * 2**zoom
-            yx = list(
-                zip(
-                    (tile_xz - tile_xz_center[0]) * OSM_TILE_SIZE + target_width / 2,
-                    (tile_yz - tile_xz_center[1]) * OSM_TILE_SIZE
-                    + target_map_height / 2,
-                )
-            )
-
-            draw.line(yx, fill="red", width=4)
-
-    return img
-
-
-def make_sharepic(
-    activity: Activity,
-    time_series: pd.DataFrame,
-    sharepic_suppressed_fields: list[str],
-    config: Config,
-) -> bytes:
-    footer_height = 100
-
-    img = make_sharepic_base([time_series], config)
-
-    draw = ImageDraw.Draw(img, mode="RGBA")
-    draw.rectangle(
-        [0, img.height - footer_height, img.width, img.height], fill=(0, 0, 0, 180)
-    )
-
-    facts = {
-        "distance_km": f"\n{activity.distance_km:.1f} km",
-    }
-    if activity.start_local_tz:
-        facts["start"] = f"{activity.start_local_tz.date()}"
-    if activity.elapsed_time:
-        facts["elapsed_time"] = re.sub(r"^0 days ", "", f"{activity.elapsed_time}")
-    if activity.kind:
-        facts["kind"] = f"{activity.kind.name}"
-    if activity.equipment:
-        facts["equipment"] = f"{activity.equipment.name}"
-
-    if activity.calories:
-        facts["calories"] = f"{activity.calories} kcal"
-    if activity.steps:
-        facts["steps"] = f"{activity.steps} steps"
-
-    facts = {
-        key: value
-        for key, value in facts.items()
-        if key not in sharepic_suppressed_fields
-    }
-
-    draw.text(
-        (35, img.height - footer_height + 10),
-        "      ".join(facts.values()),
-        font_size=20,
-    )
-
-    draw.text(
-        (img.width - 250, img.height - 20),
-        "Map: © Open Street Map Contributors",
-        font_size=14,
-    )
-
-    f = io.BytesIO()
-    img.save(f, format="png")
-    return bytes(f.getbuffer())
-
-
-def make_day_sharepic(
-    activities: pd.DataFrame,
-    time_series_list: list[pd.DataFrame],
-    config: Config,
-) -> bytes:
-    footer_height = 100
-
-    img = make_sharepic_base(time_series_list, config)
-
-    draw = ImageDraw.Draw(img, mode="RGBA")
-    draw.rectangle(
-        [0, img.height - footer_height, img.width, img.height], fill=(0, 0, 0, 180)
-    )
-
-    date = activities.iloc[0]["start_local"].date()
-    distance_km = activities["distance_km"].sum()
-    elapsed_time: pd.Timedelta = activities["elapsed_time"].sum()
-    elapsed_time = elapsed_time.round("s")
-
-    facts = {
-        "date": f"{date}",
-        "distance_km": f"{distance_km:.1f} km",
-        "elapsed_time": re.sub(r"^0 days ", "", f"{elapsed_time}"),
-    }
-
-    draw.text(
-        (35, img.height - footer_height + 10),
-        "      ".join(facts.values()),
-        font_size=20,
-    )
-
-    draw.text(
-        (img.width - 250, img.height - 20),
-        "Map: © Open Street Map Contributors",
-        font_size=14,
-    )
-
-    f = io.BytesIO()
-    img.save(f, format="png")
-    return bytes(f.getbuffer())
 
 
 def _extract_heart_rate_zones(
