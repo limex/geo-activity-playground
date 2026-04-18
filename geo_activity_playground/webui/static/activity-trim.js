@@ -24,6 +24,8 @@ export function initActivityTrimMap(config) {
 
     L.tileLayer(baseTileUrl, {
         maxZoom: 19,
+        updateWhenZooming: false,
+        keepBuffer: 4,
         attribution
     }).addTo(map);
 

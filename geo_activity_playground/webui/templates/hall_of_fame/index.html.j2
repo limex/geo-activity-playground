@@ -21,6 +21,8 @@
         })
         L.tileLayer('{{ map_tile_url|safe }}', {
             maxZoom: 19,
+            updateWhenZooming: false,
+            keepBuffer: 4,
             attribution: '{{ map_tile_attribution|safe }}'
         }).addTo(map)
 

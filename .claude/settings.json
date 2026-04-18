@@ -77,7 +77,21 @@
       "Bash(sqlite3 playground/database_recovered.sqlite \"PRAGMA integrity_check\")",
       "Bash(sqlite3 playground/database_recovered.sqlite \"SELECT COUNT\\(*\\) FROM activities; SELECT COUNT\\(*\\) FROM photos; SELECT name FROM sqlite_master WHERE name='tile_visits';\")",
       "Bash(python3 -c ' *)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/activity/353)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/activity/353)",
+      "Bash(uv sync *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} \\(gzip? %{size_download}B\\)\\\\n\" -H \"Accept-Encoding: gzip\" http://localhost:5000/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5000/heatmap/)",
+      "Bash(curl -s -o /tmp/tile1.png -w \"%{http_code} %{size_download}B ct=%{content_type}\\\\n\" \"http://localhost:5000/heatmap/tile/14/8514/5504.png\")",
+      "Bash(curl -s -o /tmp/tile2.png -w \"%{http_code} %{size_download}B\\\\n\" \"http://localhost:5000/heatmap/tile/14/8514/5504.png\")",
+      "Bash(curl -sI \"http://localhost:5000/heatmap/tile/14/8514/5504.png\")",
+      "Bash(curl -s -o /dev/null -w \"%{size_download}B\\\\n\" -H \"Accept-Encoding: gzip\" http://localhost:5000/)",
+      "Bash(curl -s -o /dev/null -w \"%{size_download}B\\\\n\" http://localhost:5000/)",
+      "Bash(curl -sI -H \"Accept-Encoding: gzip\" http://localhost:5000/)",
+      "Bash(time curl *)",
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" -H 'If-None-Match: 560' \"http://localhost:5000/heatmap/tile/14/8897/5758.png\")",
+      "Bash(curl -s -o /tmp/ex.png -w \"%{http_code} %{size_download}B ct=%{content_type}\\\\n\" \"http://localhost:5000/explorer/14/tile/14/8897/5758.png?color_strategy=colorful_cluster\")",
+      "Bash(curl -sI \"http://localhost:5000/explorer/14/tile/14/8897/5758.png?color_strategy=colorful_cluster\")"
     ]
   }
 }

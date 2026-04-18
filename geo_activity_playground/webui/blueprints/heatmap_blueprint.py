@@ -1,4 +1,3 @@
-import io
 import logging
 
 import matplotlib.pylab as pl
@@ -11,6 +10,7 @@ from ...core.activities import ActivityRepository
 from ...core.config import Config
 from ...core.datamodel import DB, StoredSearchQuery
 from ...core.heatmap_cache import blob_to_counts, get_tile_cache, write_tile_cache
+from ...core.png_encode import rgba_float_to_png
 from ...core.meta_search import (
     apply_search_filter,
     get_stored_queries,
@@ -86,23 +86,24 @@ def make_heatmap_blueprint(
     @blueprint.route("/tile/<int:z>/<int:x>/<int:y>.png")
     def tile(x: int, y: int, z: int):
         primitives = parse_search_params(request.args)
-        counts, num_activities = _get_counts(
+        png_bytes, num_activities = _get_tile_png(
             x, y, z, primitives, config, repository, activities_per_tile
         )
         etag = str(num_activities) if num_activities is not None else None
-        if etag and request.headers.get("If-None-Match") == etag:
-            return Response(status=304)
-        f = io.BytesIO()
-        pl.imsave(f, _counts_to_image(counts, config), format="png")
-        headers: dict[str, str] = {"Cache-Control": "public, max-age=43200"}
+        headers: dict[str, str] = {
+            "Cache-Control": "public, max-age=43200",
+            "Access-Control-Allow-Origin": "*",
+        }
         if etag:
             headers["ETag"] = etag
-        return Response(bytes(f.getbuffer()), mimetype="image/png", headers=headers)
+        if etag and request.headers.get("If-None-Match") == etag:
+            return Response(status=304, headers=headers)
+        return Response(png_bytes, mimetype="image/png", headers=headers)
 
     return blueprint
 
 
-def _get_counts(
+def _get_tile_png(
     x: int,
     y: int,
     z: int,
@@ -110,7 +111,7 @@ def _get_counts(
     config: Config,
     repository: ActivityRepository,
     activities_per_tile: dict[int, dict[tuple[int, int], set[int]]],
-) -> tuple[np.ndarray, int | None]:
+) -> tuple[bytes, int | None]:
     tile_pixels = (OSM_TILE_SIZE, OSM_TILE_SIZE)
     tile_counts = np.zeros(tile_pixels, dtype=np.int32)
     activity_ids = activities_per_tile[z].get((x, y), set())
@@ -144,6 +145,12 @@ def _get_counts(
                 tile_counts = np.zeros(tile_pixels, dtype=np.int32)
                 parsed_activities = set()
 
+            if (
+                parsed_activities == activity_ids
+                and cache_entry.png
+            ):
+                return cache_entry.png, len(parsed_activities)
+
         if parsed_activities - activity_ids:
             logger.warning(
                 f"Resetting heatmap cache for {x=}/{y=}/{z=}/{search_query_id=} because activities have been removed."
@@ -164,6 +171,7 @@ def _get_counts(
             parsed_activities.add(activity_id)
             _paint_activity(tile_counts, time_series, x=x, y=y, z=z)
 
+        png_bytes = rgba_float_to_png(_counts_to_image(tile_counts, config))
         write_tile_cache(
             zoom=z,
             tile_x=x,
@@ -172,8 +180,9 @@ def _get_counts(
             counts=tile_counts,
             included_activity_ids=parsed_activities,
             min_activities=config.heatmap_cache_min_activities,
+            png=png_bytes,
         )
-        return tile_counts, len(parsed_activities)
+        return png_bytes, len(parsed_activities)
     else:
         for activity_id in activity_ids:
             try:
@@ -184,7 +193,7 @@ def _get_counts(
                 )
                 continue
             _paint_activity(tile_counts, time_series, x=x, y=y, z=z)
-        return tile_counts, None
+        return rgba_float_to_png(_counts_to_image(tile_counts, config)), None
 
 
 def _favorite_search_query_id(primitives: dict) -> int | None:

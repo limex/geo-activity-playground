@@ -45,7 +45,11 @@ from ...core.datamodel import (
 )
 from ...core.enrichment import update_and_commit
 from ...core.heart_rate import HeartRateZoneComputer
-from ...core.heatmap_cache import delete_all_heatmap_cache, delete_stale_heatmap_cache
+from ...core.heatmap_cache import (
+    delete_all_heatmap_cache,
+    delete_stale_heatmap_cache,
+    invalidate_heatmap_png_cache,
+)
 from ...core.tag_extraction import apply_tag_extraction, get_tags_with_extraction_regex
 from ...core.tasks import WorkTracker, work_tracker_path
 from ...explorer.tile_visits import (
@@ -405,9 +409,10 @@ def make_settings_blueprint(
             config_accessor().color_scheme_for_kind = request.form[
                 "color_scheme_for_kind"
             ]
-            config_accessor().color_scheme_for_heatmap = request.form[
-                "color_scheme_for_heatmap"
-            ]
+            new_heatmap_scheme = request.form["color_scheme_for_heatmap"]
+            if new_heatmap_scheme != config_accessor().color_scheme_for_heatmap:
+                config_accessor().color_scheme_for_heatmap = new_heatmap_scheme
+                invalidate_heatmap_png_cache()
             config_accessor.save()
             flash("Updated color schemes.", category="success")
 

@@ -31,7 +31,7 @@ from geo_activity_playground.explorer.tile_visits import (
     rebuild_cluster_history_for_zoom,
     remove_activity_from_tile_state,
 )
-from geo_activity_playground.webui.blueprints.heatmap_blueprint import _get_counts
+from geo_activity_playground.webui.blueprints.heatmap_blueprint import _get_tile_png
 
 
 def test_accessor_removes_persisted_tile_visits_key(app) -> None:
@@ -102,7 +102,7 @@ def test_heatmap_counts_skip_deleted_activity_ids(app) -> None:
             return pd.DataFrame({"x": [0.5], "y": [0.5], "segment_id": [0]})
 
     activities_per_tile = {17: {(1, 2): {1, 2}}}
-    _ = _get_counts(1, 2, 17, {}, Repository(), activities_per_tile)
+    _ = _get_tile_png(1, 2, 17, {}, Repository(), activities_per_tile)
     assert activities_per_tile[17][(1, 2)] == {1, 2}
 
 

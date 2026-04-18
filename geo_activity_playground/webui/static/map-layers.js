@@ -23,6 +23,8 @@ export function add_layers_to_map(map, config) {
     const base_maps = {
         [baseLayerName]: L.tileLayer(baseTileUrl, {
             maxZoom: 19,
+            updateWhenZooming: false,
+            keepBuffer: 4,
             attribution
         }),
     };
@@ -68,34 +70,50 @@ export function add_layers_to_map(map, config) {
             : L.layerGroup(),
         "Colorful Cluster": L.tileLayer(`/explorer/${zoom}/tile/{z}/{x}/{y}.png?color_strategy=colorful_cluster${historyParam}`, {
             maxZoom: 19,
+            updateWhenZooming: false,
+            keepBuffer: 4,
             attribution
         }),
         "Max Cluster": L.tileLayer(`/explorer/${zoom}/tile/{z}/{x}/{y}.png?color_strategy=max_cluster${historyParam}`, {
             maxZoom: 19,
+            updateWhenZooming: false,
+            keepBuffer: 4,
             attribution
         }),
         "First Visit": L.tileLayer(`/explorer/${zoom}/tile/{z}/{x}/{y}.png?color_strategy=first`, {
             maxZoom: 19,
+            updateWhenZooming: false,
+            keepBuffer: 4,
             attribution
         }),
         "Last Visit": L.tileLayer(`/explorer/${zoom}/tile/{z}/{x}/{y}.png?color_strategy=last`, {
             maxZoom: 19,
+            updateWhenZooming: false,
+            keepBuffer: 4,
             attribution
         }),
         "Number of Visits": L.tileLayer(`/explorer/${zoom}/tile/{z}/{x}/{y}.png?color_strategy=visits`, {
             maxZoom: 19,
+            updateWhenZooming: false,
+            keepBuffer: 4,
             attribution
         }),
         "Visited": L.tileLayer(`/explorer/${zoom}/tile/{z}/{x}/{y}.png?color_strategy=visited`, {
             maxZoom: 19,
+            updateWhenZooming: false,
+            keepBuffer: 4,
             attribution
         }),
         "Missing": L.tileLayer(`/explorer/${zoom}/tile/{z}/{x}/{y}.png?color_strategy=missing`, {
             maxZoom: 19,
+            updateWhenZooming: false,
+            keepBuffer: 4,
             attribution
         }),
         "Heatmap": L.tileLayer(heatmap_url, {
             maxZoom: 19,
+            updateWhenZooming: false,
+            keepBuffer: 4,
             attribution
         }),
     };
@@ -107,7 +125,7 @@ export function add_layers_to_map(map, config) {
         const { x, y, size } = squarePlanner;
         overlay_maps["Square Planner"] = L.tileLayer(
             `/explorer/${zoom}/tile/{z}/{x}/{y}.png?color_strategy=square_planner&x=${x}&y=${y}&size=${size}`,
-            { maxZoom: 19, attribution }
+            { maxZoom: 19, updateWhenZooming: false, keepBuffer: 4, attribution }
         );
         selectedOverlay = "Square Planner";
     }

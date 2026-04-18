@@ -17,6 +17,7 @@ import sqlalchemy
 from flask import Flask, flash, redirect, request, url_for
 from flask_alembic import Alembic
 from flask_babel import Babel
+from flask_compress import Compress
 
 from ..core.activities import ActivityRepository
 from ..core.config import (
@@ -162,6 +163,7 @@ def create_app(
         Configured Flask application.
     """
     app = Flask(__name__)
+    Compress(app)
 
     app.config["SQLALCHEMY_DATABASE_URI"] = database_uri
     app.config["UPLOAD_FOLDER"] = "Activities"
