@@ -9,3 +9,4 @@ site
 Cache
 database.sqlite
 playground/
+.claude/settings.json

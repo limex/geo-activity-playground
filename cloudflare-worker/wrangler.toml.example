@@ -1,0 +1,12 @@
+name = "tiles-mapbox"
+main = "src/index.js"
+compatibility_date = "2025-04-01"
+
+# Copy this file to wrangler.toml and fill in your real hostname and zone.
+# wrangler.toml is gitignored so the hostname is never committed.
+routes = [
+  { pattern = "tiles-mapbox.example.com/*", zone_name = "example.com" }
+]
+
+[observability]
+enabled = true
