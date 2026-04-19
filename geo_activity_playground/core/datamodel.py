@@ -744,6 +744,7 @@ class HeatmapTileCache(DB.Model):
     last_used: Mapped[datetime.datetime | None] = mapped_column(
         sa.DateTime, nullable=True
     )
+    png: Mapped[bytes | None] = mapped_column(sa.LargeBinary, nullable=True)
 
 
 class Segment(DB.Model):

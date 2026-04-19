@@ -47,6 +47,7 @@ def write_tile_cache(
     counts: np.ndarray,
     included_activity_ids: set[int],
     min_activities: int,
+    png: bytes | None = None,
 ) -> None:
     num_activities = len(included_activity_ids)
     cache_entry = get_tile_cache(zoom, tile_x, tile_y, search_query_id)
@@ -70,7 +71,18 @@ def write_tile_cache(
     cache_entry.included_activity_ids = sorted(included_activity_ids)
     cache_entry.num_activities = num_activities
     cache_entry.last_used = datetime.datetime.now()
+    cache_entry.png = png
     DB.session.commit()
+
+
+def invalidate_heatmap_png_cache() -> int:
+    result = DB.session.execute(
+        sqlalchemy.update(HeatmapTileCache)
+        .where(HeatmapTileCache.png.is_not(None))
+        .values(png=None)
+    )
+    DB.session.commit()
+    return int(getattr(result, "rowcount", 0) or 0)
 
 
 def touch_tile_cache(cache_entry: HeatmapTileCache) -> None:

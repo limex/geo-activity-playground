@@ -30,6 +30,7 @@ from flask_babel import gettext as _
 from ...core.config import Config, ConfigAccessor
 from ...core.coordinates import Bounds
 from ...core.datamodel import DB, Activity, ExplorerTileBookmark, TileVisit
+from ...core.png_encode import rgba_float_to_png
 from ...core.raster_map import OSM_TILE_SIZE
 from ...core.tiles import compute_tile, get_tile_upper_left_lat_lon
 from ...explorer.grid_file import (
@@ -633,9 +634,12 @@ def make_explorer_blueprint(
                     if width >= 64:
                         result[yo * width, :, :] = 0.5
                         result[:, xo * width, :] = 0.5
-        f = io.BytesIO()
-        pl.imsave(f, result, format="png")
-        return Response(bytes(f.getbuffer()), mimetype="image/png")
+        png_bytes = rgba_float_to_png(result)
+        headers = {
+            "Cache-Control": "public, max-age=3600",
+            "Access-Control-Allow-Origin": "*",
+        }
+        return Response(png_bytes, mimetype="image/png", headers=headers)
 
     @blueprint.route(
         "/<int:zoom>/info/<float(signed=True):latitude>/<float(signed=True):longitude>"

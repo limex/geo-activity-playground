@@ -85,13 +85,15 @@
 
     L.tileLayer('{{ map_tile_url|safe }}', {
         maxZoom: 19,
+        updateWhenZooming: false,
+        keepBuffer: 4,
         attribution: '{{ map_tile_attribution|safe }}'
     }).addTo(map);
 
     {% if heatmap_layers %}
     var heatmapOverlays = {
         {% for label, args in heatmap_layers %}
-        {{ label | replace('kind is ', '') | replace('"', '') | tojson }}: L.tileLayer('/heatmap/tile/{z}/{x}/{y}.png?{{ args }}', { maxZoom: 19, opacity: 0.7 }),
+        {{ label | replace('kind is ', '') | replace('"', '') | tojson }}: L.tileLayer('/heatmap/tile/{z}/{x}/{y}.png?{{ args }}', { maxZoom: 19, updateWhenZooming: false, keepBuffer: 4, opacity: 0.7 }),
         {% endfor %}
     };
     L.control.layers(null, heatmapOverlays).addTo(map);
