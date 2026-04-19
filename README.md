@@ -12,6 +12,17 @@ Please see the [hosted documentation](https://martin-ueding.github.io/geo-activi
 
 ---
 
+## Fork Changes (v1.26.14)
+
+- **Faster map loading**: Base map tiles (OSM, Mapbox) are now fetched directly by the browser instead of being proxied through the app server, so they no longer compete with Python-rendered heatmap/explorer tiles for Waitress worker threads. Leaflet is also configured with `updateWhenZooming: false` and `keepBuffer: 4` across every map, cutting redundant tile requests while panning and zooming.
+- **Heatmap PNG cache**: Rendered heatmap tiles are now stored as PNG blobs in the SQLite cache (new `png` column on `heatmap_tile_cache`, migration `7bff896e46f6`). Warm tile requests skip re-rendering entirely and return in ~12 ms instead of multiple seconds. The cache is invalidated automatically when the heatmap color scheme changes.
+- **Tile HTTP caching**: Heatmap and explorer tile responses now send `ETag`, `Cache-Control: public, max-age=43200`, and `Access-Control-Allow-Origin: *` headers, so the browser serves warm tiles without a round trip and external embeds work out of the box.
+- **Gzip compression**: Flask-Compress is enabled for HTML/JSON/CSS/JS responses. The main page drops from ~160 KB to ~12 KB on the wire.
+- **Faster PNG encoding**: Replaced matplotlib's PNG encoder with PIL using `compress_level=1`, via a shared `png_encode` helper used by both the heatmap and explorer blueprints.
+- **Cloudflare Worker for Mapbox tiles**: A new `cloudflare-worker/` directory scaffolds a Worker that proxies Mapbox raster tiles at `/{style}/{size}/{z}/{x}/{y}.png`, injecting the access token from a Worker secret so it never reaches the browser. The Worker caches tiles at Cloudflare's edge for 30 days.
+
+---
+
 ## Fork Changes (v1.26.13)
 
 - **Photo map: heatmap overlay per favorite query**: Each saved favorite search query now appears as a toggleable heatmap overlay in the photo map's layer control. Activity kind labels are shown without the "kind is" prefix and without quotes (e.g. "Ride" instead of `kind is "Ride"`). Active layers are persisted in `localStorage` and restored on next visit.
